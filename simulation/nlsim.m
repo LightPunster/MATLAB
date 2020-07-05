@@ -1,6 +1,10 @@
 function [y,t,x] = nlsim(f,u,t,x0,varargin)
-%UNTITLED Summary of this function goes here
-%   Detailed explanation goes here
+%nlsim simulates a time-invariant system with nonlinear dynamics
+%   This function is meant to serve as a nonlinear variant of the lsim
+%   function. Inputs are:
+%       - f: the function handle which has inputs x (1xn) and u (1xn) and outputs x_d
+%       (the state derivatives) and y (the system output, if applicable)
+%       - u: 
 
 %Input checking
 if numel(x0)>length(x0)
@@ -22,5 +26,4 @@ for i=2:length(t)
 end
 
 x = x'; y = y'; %Return transposed output
-size(x)
 end

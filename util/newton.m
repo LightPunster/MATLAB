@@ -14,7 +14,7 @@ function [x,n,err] = newton(f, x0, varargin)
 %       h sets the perturbation used to calculated df/dx (dfault: tol/10)
 %   
 %   Author: Nathan Daniel
-%   Date: 06/15/2020
+%   Date: 06/23/2020
 
 n = 0; %Stores number of iterations
 switch nargin
@@ -22,7 +22,7 @@ switch nargin
         if(x0==0)
             tol = 1e-10;
         else
-            tol = abs(x0)*1e-6;
+            tol = norm(x0)*1e-6; %Norm allows function to be used for tensors
         end
         iter = 10;
         h = tol/10;
@@ -34,24 +34,25 @@ switch nargin
         tol = varargin{1};
         iter = varargin{2};
         h = tol/10;
-    otherwise
+    case 5
         tol = varargin{1};
         iter = varargin{2};
-        h = varargin{3};        
+        h = varargin{3};
+    otherwise
+        error('Expected between 2 & 5 input arguments. Got %d.',nargin);
 end
 
 x = x0;
-
 %Ensures accuracy condition not met initially
 x_m1 = x + max(10*tol,1);
 
-%Iterate on x using Newton's method to achieve more accurate estimatezzz
-while(abs(x-x_m1)>tol) && (n<iter)
+%Iterate on x using Newton's method to achieve more accurate estimate
+while (norm(x-x_m1)>tol) && (n<iter) %Norm allows function to be used for tensors
     x_m1 = x;
     dfdx = (f(x+h) - f(x-h))/(2*h);
     %If dfdx is 0, set to 1/h to avoid divide-by-zero error
     if dfdx==0, dfdx = -1/h; end
-    x = x_m1 - f(x)/dfdx;
+    x = x_m1 - f(x)./dfdx;
     n = n + 1;
 end
 
