@@ -1,4 +1,4 @@
-function parameters = multivariateTrade(parameters,residual,output,varargin)
+function [parameters,input,output] = multivariateTrade(parameters,residual,output,varargin)
 %"multivariateTrade.m" plots relationship between up to three
 %mathematically related paramters
 %   parameters = structure containing any number of scalars and at most 2
@@ -73,6 +73,8 @@ function parameters = multivariateTrade(parameters,residual,output,varargin)
     end
 
     %Use Newton's method at each point to allow for relations with no explicit solution.
+    
+    %[parameters.(output),n_iter,~] = newton(@(x) residual(x,parameters,output),x0);
     for i=1:numel(parameters.(output))
         
         %Build parameter structure at each point
@@ -87,10 +89,11 @@ function parameters = multivariateTrade(parameters,residual,output,varargin)
         end
         
         %Newton's method call
-        [parameters.(output)(i),n_iter,~] = newton(@(x) residual(x,parameters_i,output),x0);
+        [parameters.(output)(i),n_iter,err] = newton(@(x) residual(x,parameters_i,output),x0);
         if verb
             fprintf('Percent Complete: %.2f\n',100*i/numel(parameters.(output)))
             fprintf('\tSolved relation in %d iterations.\n',n_iter)
+            fprintf('\tFinally iteration had error of %f.\n',err)
         end
     end
 
