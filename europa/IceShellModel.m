@@ -123,7 +123,7 @@ classdef IceShellModel
             end
             M = 0;
             for i=2:numel(p)
-                dV = (obj.p.Z(i)-obj.p.Z(i-1));
+                dV = (obj.p.Z(i)-obj.p.Z(i-1)); %vol of 1 m^2 col
                 M = M + (obj.rho.vals(i)+obj.rho.vals(i-1))*dV/2;
                 try p(i) = M*obj.g0;
                 catch, error("Object property 'g0' not properly initialized.\n")
