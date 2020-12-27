@@ -8,6 +8,12 @@ classdef Node
         parent
         depth
         children
+        
+        %Costs
+        h %Predicted cost from current node to goal (typically some heuristic)
+        g %Cost from start to current node
+        rhs %LPA* "Look-ahead value" for g
+        
     end
     
     methods
@@ -27,6 +33,8 @@ classdef Node
                     error('Invalid number of arguments in Node constructor.')
             end
             obj.children = {};
+            obj.g = inf;
+            obj.rhs = inf;
         end
         
         function addChild(obj,childNode)
@@ -45,6 +53,14 @@ classdef Node
                 obj.addChild(childNode);
                 newNodes{i} = childNode;
             end
+        end
+        
+        function go = CostToCome(obj)
+            go = min(obj.g,obj.rhs);
+        end
+        
+        function f = Cost(obj)
+            f = obj.CostToCome() + obj.h;
         end
             
     end

@@ -4,7 +4,8 @@ function explored = ExploredCheck(node,exploredSet)
 
     explored = false;
     for i=1:length(exploredSet)
-        explored = explored|isequal(node.state,exploredSet{i}.state);
+        %explored = explored|isequal2(node.state,exploredSet{i}.state);
+        explored = explored | strcmp(node.name,exploredSet{i}.name);
     end
 end
 
