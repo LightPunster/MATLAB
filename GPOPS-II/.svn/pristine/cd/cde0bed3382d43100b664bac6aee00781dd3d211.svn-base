@@ -1,0 +1,303 @@
+function hesnz = gpopsHesnzRPMD(sig, lam, Z, probinfo)
+
+% gpopsHesnzRPMD
+% this function computes the values of the Hessian nonzeros that correspond
+% to the locations of the Hessian sparsity pattern, the values associated
+% with duplicate indices will be summed together to define the value for
+% that element
+
+% NLP variable order
+% [states*(nodes+1); controls*nodes; t0; tf, Q] for each phase
+% [stack all phases(1;...;numphase); parameters]
+
+% organize the multipliers to correspond with the optimal contol problem
+% constraints
+ocpmult = gpopsMultipliersRPMD(lam, probinfo);
+
+% get OCP info
+numphase = probinfo.numphase;
+numstate = probinfo.numstate;
+numcontrol = probinfo.numcontrol;
+numpath = probinfo.numpath;
+numintegral = probinfo.numintegral;
+numeventgroup = probinfo.numeventgroup;
+numevent = probinfo.numevent;
+
+% get input for OCP functions
+% get continput and endpinput
+[continput, endpinput, tp0, tpf] = gpopsContEndpInputRPMD(Z, probinfo);
+
+% get first and second derivatives of the optimal control problem
+if probinfo.analyticflag;
+  conthes = feval(probinfo.conthes, continput);
+  endphes = feval(probinfo.endphes, endpinput);
+  contgrd = feval(probinfo.contgrd, continput);
+elseif probinfo.adigatorflag
+  [conthes, contgrd] = gpopsAdigatorContHes(continput,probinfo);
+  endphes = gpopsAdigatorEndpHes(endpinput,probinfo);
+else
+  conthes = feval(probinfo.conthes, continput, probinfo);
+  endphes = feval(probinfo.endphes, endpinput, probinfo);
+  contgrd = feval(probinfo.contgrd, continput, probinfo);
+end
+
+% get number of nodes
+numnodes = probinfo.numnodes;
+
+% get hesnvc
+hesnvc = probinfo.derivativemap.hesnvc;
+
+% preallocate hesnz
+hesnz = zeros(probinfo.hesnnz,1);
+
+% Hessian nonzero locations from continuous function
+hesmarkere = 0;
+for phasecount = 1:numphase;
+  % OCP info for phase
+  numstatep = numstate(phasecount);
+  numcontrolp = numcontrol(phasecount);
+  numpathp = numpath(phasecount);
+  numintegralp = numintegral(phasecount);
+  numnodesp = numnodes(phasecount);
+  
+  
+  % here multiply by fractionMat
+  % get fractionMat and integration weights for phase
+  fractionMat = probinfo.collocation(phasecount).fractionMat;
+  w = probinfo.collocation(phasecount).w(:,1);
+  s = probinfo.collocation(phasecount).s(:,1);
+  
+  % get time interval change derivatives
+  dtdt0 = probinfo.collocation(phasecount).dtdt0;
+  dtdtf = probinfo.collocation(phasecount).dtdtf;
+  
+  % conthes, contgrd and multipliers for phase
+  conthesp = conthes(phasecount);
+  contgrdp = contgrd(phasecount);
+  contmultp = ocpmult.contmult(phasecount);
+  
+  % scale dynamicshes and dynamicsgrd by segement fractionages
+  if probinfo.derivativemap.dynamicsnnz1(phasecount) ~= 0
+    contgrdp.dynamicsgrd = full(fractionMat*contgrdp.dynamicsgrd);
+  end
+  if probinfo.derivativemap.dynamicsnnz2(phasecount) ~= 0
+    conthesp.dynamicshes = full(fractionMat*conthesp.dynamicshes);
+  end
+  
+  % get time difference
+  tdiff = (tpf(phasecount) - tp0(phasecount))/2;
+  
+  % get NLP first and second derivative contmap for each phase
+  contmap1 = probinfo.derivativemap.contmap1(phasecount);
+  contmap2 = probinfo.derivativemap.contmap2(phasecount);
+  
+  % find nonzero locations for each OCP variable
+  for contnvc2count = 1:hesnvc(phasecount);
+    varnum1 = contmap2.conthesmap(1,contnvc2count);
+    varnum2 = contmap2.conthesmap(2,contnvc2count);
+    if varnum1 <= numstatep+numcontrolp;
+      % varnum1 and varnum2 are either state or control
+      % get nvc2 ref
+      nvc2ref = contmap2.conthesmap(4,contnvc2count);
+      % component A: defect and integral second derivatives
+      % component B: path second derivatives
+      % compute defect component
+      A = zeros(numnodesp,1);
+      for statecount = 1:numstatep;
+        dynamicsref = contmap2.dynamicsmap2(statecount,nvc2ref);
+        if dynamicsref ~= 0;
+          A = A + contmultp.defectmult(:,statecount).*conthesp.dynamicshes(:,dynamicsref);
+        end
+      end
+      % compute integral component
+      if numintegralp ~= 0;
+        Aint = zeros(numnodesp,1);
+        for integralcount = 1:numintegralp;
+          integralref = contmap2.integrandmap2(integralcount,nvc2ref);
+          if integralref ~= 0;
+            Aint = Aint + contmultp.integralmult(integralcount).*conthesp.integrandhes(:,integralref);
+          end
+        end
+        A = A + w.*Aint;
+      end
+      % compute path component
+      B = zeros(numnodesp,1);
+      if numpathp ~= 0;
+        for pathcount = 1:numpathp;
+          pathref = contmap2.pathmap2(pathcount,nvc2ref);
+          if pathref ~= 0;
+            B = B + contmultp.pathmult(:,pathcount).*conthesp.pathhes(:,pathref);
+          end
+        end
+      end
+      % get assignment index
+      hesmarkers = hesmarkere + 1;
+      hesmarkere = hesmarkere + numnodesp;
+      hesindex = hesmarkers:hesmarkere;
+      % assign values
+      hesnz(hesindex) = -tdiff.*A + B;
+    else
+      % varnum1 is either time or a parameter and varnum2 is either
+      % state, control or time
+      % get nvc1 ref and nvc2ref
+      nvc1ref = contmap2.conthesmap(3,contnvc2count);
+      nvc2ref = contmap2.conthesmap(4,contnvc2count);
+      % component A: defect and integral first derivatives
+      % component B: defect and integral second derivatives
+      % component C: path second derivatives
+      A = zeros(numnodesp,1);
+      if nvc1ref ~= 0;
+        % compute defect component
+        for statecount = 1:numstatep;
+          dynamicsref = contmap1.dynamicsmap1(statecount,nvc1ref);
+          if dynamicsref ~= 0;
+            A = A + contmultp.defectmult(:,statecount).*contgrdp.dynamicsgrd(:,dynamicsref);
+          end
+        end
+        % compute integral component
+        if numintegralp ~= 0;
+          Aint = zeros(numnodesp,1);
+          for integralcount = 1:numintegralp;
+            integralref = contmap1.integrandmap1(integralcount,nvc1ref);
+            if integralref ~= 0;
+              Aint = Aint + contmultp.integralmult(integralcount).*contgrdp.integrandgrd(:,integralref);
+            end
+          end
+          A = A + w.*Aint;
+        end
+      end
+      % components B and C are functions of the second
+      % derivatives
+      B = zeros(numnodesp,1);
+      C = zeros(numnodesp,1);
+      if nvc2ref ~= 0;
+        % compute defect component
+        for statecount = 1:numstatep;
+          dynamicsref = contmap2.dynamicsmap2(statecount,nvc2ref);
+          if dynamicsref ~= 0;
+            B = B + contmultp.defectmult(:,statecount).*conthesp.dynamicshes(:,dynamicsref);
+          end
+        end
+        % compute integral component
+        if numintegralp ~= 0;
+          Bint = zeros(numnodesp,1);
+          for integralcount = 1:numintegralp;
+            integralref = contmap2.integrandmap2(integralcount,nvc2ref);
+            if integralref ~= 0;
+              Bint = Bint + contmultp.integralmult(integralcount).*conthesp.integrandhes(:,integralref);
+            end
+          end
+          B = B + w.*Bint;
+        end
+        % compute path component
+        if numpathp ~= 0;
+          for pathcount = 1:numpathp;
+            pathref = contmap2.pathmap2(pathcount,nvc2ref);
+            if pathref ~= 0;
+              C = C + contmultp.pathmult(:,pathcount).*conthesp.pathhes(:,pathref);
+            end
+          end
+        end
+      end
+      if varnum1 == numstatep+numcontrolp+1;
+        % varnum1 is time
+        if varnum2 <= numstatep+numcontrolp;
+          % varnum2 are either state or control
+          % get assignment index
+          hesmarkers = hesmarkere + 1;
+          hesmarkere = hesmarkere + numnodesp;
+          hesindex = hesmarkers:hesmarkere;
+          % assign values t0/state or t0/control
+          hesnz(hesindex) = A/2 - tdiff.*dtdt0.*B + dtdt0.*C;
+          % get assignment index
+          hesmarkers = hesmarkere + 1;
+          hesmarkere = hesmarkere + numnodesp;
+          hesindex = hesmarkers:hesmarkere;
+          % assign values tf/state or tf/control
+          hesnz(hesindex) = -A/2 - tdiff.*dtdtf.*B + dtdtf.*C;
+        else
+          % varnum2 is time
+          % t0/t0
+          hesmarkere = hesmarkere + 1;
+          hesnz(hesmarkere) = dtdt0'*A - dtdt0'*(tdiff.*dtdt0.*B) + dtdt0'*(dtdt0.*C);
+          % tf/t0
+          hesmarkere = hesmarkere + 1;
+          hesnz(hesmarkere) = (s'*A)/2 - dtdtf'*(tdiff.*dtdt0.*B) + dtdtf'*(dtdt0.*C);
+          % tf/tf
+          hesmarkere = hesmarkere + 1;
+          hesnz(hesmarkere) = -dtdtf'*A - dtdtf'*(tdiff.*dtdtf.*B) + dtdtf'*(dtdtf.*C);
+        end
+      else
+        % varnum1 is parameter
+        if varnum2 <= numstatep+numcontrolp;
+          % varnum2 are either state or control
+          % get assignment index
+          hesmarkers = hesmarkere + 1;
+          hesmarkere = hesmarkere + numnodesp;
+          hesindex = hesmarkers:hesmarkere;
+          % assign values
+          hesnz(hesindex) = -tdiff.*B + C;
+        elseif varnum2 == numstatep+numcontrolp+1;
+          % varnum2 is time
+          % parameter/t0
+          hesmarkere = hesmarkere + 1;
+          hesnz(hesmarkere) = sum(A,1)/2 - tdiff.*dtdt0'*B + dtdt0'*C;
+          % parameter/tf
+          hesmarkere = hesmarkere + 1;
+          hesnz(hesmarkere) = -sum(A,1)/2 - tdiff.*dtdtf'*B + dtdtf'*C;
+        else
+          % varnum2 is parameter
+          % parameterI/parameterJ
+          hesmarkere = hesmarkere + 1;
+          hesnz(hesmarkere) = sum(-tdiff.*B + C,1);
+        end
+      end
+    end
+  end
+end
+
+% get endpnvc2
+endpnvc2 = probinfo.derivativemap.endpnvc2;
+
+% objective second derivative map, and objective second derivatives
+endpobjmap2 = probinfo.derivativemap.endpobjmap2;
+objectivehes = endphes.objectivehes;
+
+% event second derivative map, event multipliers
+% and event second derivatives
+if numeventgroup ~= 0;
+  endpeventmap2 = probinfo.derivativemap.endpeventmap2;
+  eventmultgroup = ocpmult.eventmultgroup;
+  eventgroup = endphes.eventgroup;
+end
+
+% Hessian nonzero locations from endpoint function
+for endpnvccount = 1:endpnvc2;
+  % initialize value
+  val = 0;
+  % get objective reference
+  objref = endpobjmap2(endpnvccount);
+  if objref ~= 0;
+    % objective second derivative
+    val = val + sig*objectivehes(objref);
+  end
+  % event second derivatives
+  if numeventgroup ~= 0;
+    for eventgroupcount = 1:numeventgroup;
+      % get event second derivative map for event
+      if numevent(eventgroupcount) ~= 0;
+        eventmap2e = endpeventmap2(eventgroupcount).second;
+        for eventcout = 1:numevent(eventgroupcount);
+          % get event second derivatve reference
+          eventref = eventmap2e(eventcout,endpnvccount);
+          if eventref ~= 0;
+            val = val + eventmultgroup(eventgroupcount).eventmult(eventcout)*eventgroup(eventgroupcount).eventhes(eventref);
+          end
+        end
+      end
+    end
+  end
+  % assign location
+  hesmarkere = hesmarkere + 1;
+  hesnz(hesmarkere) = val;
+end

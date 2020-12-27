@@ -1,0 +1,182 @@
+function result = gpopsIpoptHandlerRPMD(ZG, ZL, ZU, FL, FU, name, nlpoptions, probinfo, zlG, zuG, FmulG)
+% NLP derivative options
+if probinfo.derivativelevel == 1;
+  % get Jacobian linear part, and nonlinear index
+  probinfo = gpopsIpoptGrdJacSparsityRPMD(probinfo);
+  
+  if probinfo.scaleflag;
+    % scale NLP bounds
+    ZL = probinfo.Zscale.*ZL + probinfo.Zshift;
+    ZU = probinfo.Zscale.*ZU + probinfo.Zshift;
+    ZG = probinfo.Zscale.*ZG + probinfo.Zshift;
+    FL = probinfo.Fscale.*FL;
+    FU = probinfo.Fscale.*FU;
+    if probinfo.warmStartFlag
+      FmulG = FmulG./probinfo.Fscale;
+    end
+    
+    % get Jacobian scales, scale linear part
+    probinfo.grdscale = probinfo.objscale./probinfo.Zscale(probinfo.grdpat);
+    probinfo.jacscale = probinfo.Fscale(probinfo.jacnlpat(:,1))./probinfo.Zscale(probinfo.jacnlpat(:,2));
+    % TEST ----
+    probinfo.jaclinNS = probinfo.jaclin;
+    % ---------
+    probinfo.jaclin = diag(sparse(probinfo.Fscale))*probinfo.jaclin*diag(sparse(1./probinfo.Zscale));
+    
+    % set IPOPT callback functions
+    funcs.objective = @(Z)gpopsIpoptObjScaledRPMD(Z,probinfo);
+    funcs.gradient = @(Z)gpopsIpoptGrdScaledRPMD(Z,probinfo);
+    funcs.constraints = @(Z)gpopsIpoptConScaledRPMD(Z,probinfo);
+    funcs.jacobian = @(Z)gpopsIpoptJacScaledRPMD(Z,probinfo);
+    funcs.jacobianstructure = @()gpopsIpoptJacPatRPMD(probinfo);
+    options.ipopt.hessian_approximation = 'limited-memory';
+  else
+    % set IPOPT callback functions
+    funcs.objective = @(Z)gpopsIpoptObjRPMD(Z,probinfo);
+    funcs.gradient = @(Z)gpopsIpoptGrdRPMD(Z,probinfo);
+    funcs.constraints = @(Z)gpopsIpoptConRPMD(Z,probinfo);
+    funcs.jacobian = @(Z)gpopsIpoptJacRPMD(Z,probinfo);
+    funcs.jacobianstructure = @()gpopsIpoptJacPatRPMD(probinfo);
+    options.ipopt.hessian_approximation = 'limited-memory';
+  end
+elseif probinfo.derivativelevel == 2;
+  % get Jacobian linear part, and nonlinear index
+  probinfo = gpopsIpoptGrdJacSparsityRPMD(probinfo);
+  % get Hessian nonlinear index
+  probinfo = gpopsIpoptHesSparsityRPMD(probinfo);
+  if probinfo.scaleflag;
+    % scale NLP bounds
+    ZL = probinfo.Zscale.*ZL + probinfo.Zshift;
+    ZU = probinfo.Zscale.*ZU + probinfo.Zshift;
+    ZG = probinfo.Zscale.*ZG + probinfo.Zshift;
+    FL = probinfo.Fscale.*FL;
+    FU = probinfo.Fscale.*FU;
+    if probinfo.warmStartFlag
+      FmulG = FmulG./probinfo.Fscale;
+    end
+    
+    % get Jacobian scales, scale linear part, get Hessian scales
+    probinfo.grdscale = probinfo.objscale./probinfo.Zscale(probinfo.grdpat);
+    probinfo.jacscale = probinfo.Fscale(probinfo.jacnlpat(:,1))./probinfo.Zscale(probinfo.jacnlpat(:,2));
+    % TEST ----
+    probinfo.jaclinNS = probinfo.jaclin;
+    % ---------
+    probinfo.jaclin = diag(sparse(probinfo.Fscale))*probinfo.jaclin*diag(sparse(1./probinfo.Zscale));
+    probinfo.hesscale = 1./probinfo.Zscale(probinfo.hespat(:,1))./probinfo.Zscale(probinfo.hespat(:,2));
+    
+    % set IPOPT callback functions
+    funcs.objective = @(Z)gpopsIpoptObjScaledRPMD(Z,probinfo);
+    funcs.gradient = @(Z)gpopsIpoptGrdScaledRPMD(Z,probinfo);
+    funcs.constraints = @(Z)gpopsIpoptConScaledRPMD(Z,probinfo);
+    funcs.jacobian = @(Z)gpopsIpoptJacScaledRPMD(Z,probinfo);
+    funcs.jacobianstructure = @()gpopsIpoptJacPatRPMD(probinfo);
+    funcs.hessian = @(Z,sigma,lambda)gpopsIpoptHesScaledRPMD(Z,sigma,lambda,probinfo);
+    funcs.hessianstructure = @()gpopsIpoptHesPatRPMD(probinfo);
+  else
+    % set IPOPT callback functions
+    funcs.objective = @(Z)gpopsIpoptObjRPMD(Z,probinfo);
+    funcs.gradient = @(Z)gpopsIpoptGrdRPMD(Z,probinfo);
+    funcs.constraints = @(Z)gpopsIpoptConRPMD(Z,probinfo);
+    funcs.jacobian = @(Z)gpopsIpoptJacRPMD(Z,probinfo);
+    funcs.jacobianstructure = @()gpopsIpoptJacPatRPMD(probinfo);
+    funcs.hessian = @(Z,sigma,lambda)gpopsIpoptHesRPMD(Z,sigma,lambda,probinfo);
+    funcs.hessianstructure = @()gpopsIpoptHesPatRPMD(probinfo);
+  end
+end
+
+options.lb = ZL; % Lower bound on the variables.
+options.ub = ZU; % Upper bound on the variables.
+options.cl = FL; % Lower bounds on the constraint functions.
+options.cu = FU; % Upper bounds on the constraint functions.
+if probinfo.warmStartFlag
+  options.zl = -zlG; % guess for multipliers on lower variable bounds
+  options.zu = -zuG; % guess for multipliers on upper variable bounds
+  options.lambda = -FmulG; % guess for multipliers on the constraints
+  clear zlG zuG FmulG
+end
+
+clear ZL ZU FL FU
+
+% setup nlp options from nlpoptions
+options.ipopt.tol = nlpoptions.tolerance;
+options.ipopt.linear_solver = nlpoptions.linear_solver;
+options.ipopt.max_iter = nlpoptions.maxiterations;
+
+% ipopt options
+% options.ipopt.derivative_test = 'first-order'; % derivative check
+% options.ipopt.nlp_scaling_method = 'none'; % turn scaling off
+% options.ipopt.nlp_scaling_method = 'gradient-based'; % turn scaling on (default)
+%options.ipopt.mu_init = 1e-2; % changin initial barrier parameter
+%options.ipopt.bound_relax_factor = 1e-6; % equality constraint relaxation factor
+%options.ipopt.file_print_level = 12;
+options.ipopt.mu_strategy = 'adaptive';
+options.ipopt.ma57_automatic_scaling = 'yes';
+
+if probinfo.displaylevel > 1;
+  options.ipopt.print_user_options = 'yes';
+  options.ipopt.output_file = [name,'IPOPTinfo.txt']; % print output file
+  options.ipopt.print_level = 5; % set print level default
+else
+  options.ipopt.print_user_options = 'no';
+  options.ipopt.print_level = 0; % set print level default
+end
+
+if probinfo.warmStartFlag
+  options.ipopt.warm_start_init_point = 'yes';
+else
+  options.ipopt.warm_start_init_point = 'no';
+end
+
+% Run IPOPT.
+tstart = tic; % record ipopt runtime
+[Zsol, info] = ipopt(ZG,funcs,options);
+runtime = toc(tstart);
+
+% check warmStartFlag should be turned on or off
+if info.status == 0
+    if isfield(probinfo,'warmStartMesh');
+        probinfo.warmStartFlag = true;
+    else
+        probinfo.warmStartFlag = false;
+    end
+else
+  probinfo.warmStartFlag = false;
+end
+
+% change Fmul to what is expected
+Fmul = -info.lambda;
+
+if probinfo.warmStartFlag
+  % change zl and zu to what is expected
+  zl = -info.zl;
+  zu = -info.zu;
+end
+
+% unscale output
+if probinfo.scaleflag;
+  Zsol = (Zsol - probinfo.Zshift)./probinfo.Zscale;
+  Fmul = Fmul.*probinfo.Fscale;
+end
+
+% get cost
+result.objective = gpopsObjRPMD(Zsol, probinfo);
+
+% get solution
+if probinfo.warmStartFlag
+  [result.solution, result.nlpmultipliers] = gpopsSolutionRPMD(Zsol, Fmul, probinfo, 'ipopt', zl, zu);
+else
+  [result.solution, result.nlpmultipliers] = gpopsSolutionRPMD(Zsol, Fmul, probinfo, 'ipopt');
+end
+
+% get nlp output info
+result.nlpinfo = info.status;
+
+% get nlp solver time
+result.nlptime = runtime;
+result.nlpiter = info.iter;
+result.warmStartFlag = probinfo.warmStartFlag;
+if isfield(probinfo,'warmStartMesh')
+result.warmStartMesh = probinfo.warmStartMesh;
+end
+
+end

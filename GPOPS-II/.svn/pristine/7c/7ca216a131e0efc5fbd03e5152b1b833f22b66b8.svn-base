@@ -1,0 +1,81 @@
+function probinfo = gpopsDependencies(setup, probinfo)
+
+% gpopsDependencies
+% This function gets the optimal control problem dependencies for either
+% the first or second derivative levels
+
+% get endpoint function variable locations
+probinfo.endpvarloc = gpopsEndpVariablesLoc_Sub(probinfo);
+
+%keyboard;
+if strcmpi(setup.derivatives.supplier, 'analytic');
+  % if analytic derivatives are given the OCP dependencies are found directly
+  % from the derivative functions
+  derivativemap = gpopsDependAnalytic(probinfo, setup);
+elseif strcmpi(setup.derivatives.supplier, 'adigator');
+  % if adigator derivatives are given the OCP dependencies are found directly
+  % from the derivative functions
+  [derivativemap, probinfo] = gpopsDependADiGator(probinfo, setup);
+elseif strcmpi(setup.derivatives.dependencies, 'full');
+  % full OCPdependencies assumes every function of the optimal control
+  % problem has a derivative with respect to every variable in the
+  % problem
+  derivativemap = gpopsDependFull(probinfo, probinfo.derivativelevel);
+elseif strcmpi(setup.derivatives.dependencies, 'sparse');
+  % the optimal control problem dependencies are found using
+  % finite differencing to differentiate the optimal control problem at
+  % many sample points
+  derivativemap = gpopsDependSparse(probinfo, setup);
+elseif strcmpi(setup.derivatives.dependencies, 'sparseNaN');
+  % the optimal control problem dependencies are found using
+  % NaN as a variable value to find function dependencies, second
+  % derivatives are projected from the first derivatives
+  derivativemap = gpopsDependSparseNaN(probinfo, setup);
+end
+% get continuous function Hessian map
+if probinfo.derivativelevel == 2
+  derivativemap = gpopsContHesMap(probinfo, derivativemap);
+end
+
+% add derivative map to probinfo structure
+probinfo.derivativemap = derivativemap;
+
+end
+
+function endpvarloc = gpopsEndpVariablesLoc_Sub(probinfo)
+
+% gpopsEndpVariables
+% this function gets endpoint function variable locations
+% each column reposents a variable in the endpoint function
+% the first row contains the phase the variable is in
+% (parameters are listed as phase 0)
+% the second row contains the variable number in that phase
+
+% get OCP sizes
+numphase = probinfo.numphase;
+numstate = probinfo.numstate;
+numintegral = probinfo.numintegral;
+statesum = sum(numstate,2);
+integrandsum = sum(numintegral,2);
+numparameters = probinfo.numparameter;
+
+% total number of endpoint variables
+numOCPendpvar = 2*statesum+integrandsum+2*numphase+numparameters;
+
+% preallocate endpvarloc
+endpvarloc = zeros(2,numOCPendpvar);
+
+refmarker = 0;
+for phasecount = 1:numphase
+  % number of variables in each phase
+  numvarphase = 2*numstate(phasecount)+2+numintegral(phasecount);
+  phaseindex = 1:numvarphase;
+  % the first row contains the phase the variable is in
+  % the second row contains the variable number in that phase
+  endpvarloc(:,phaseindex+refmarker) = [phasecount*ones(1,numvarphase); phaseindex];
+  refmarker = refmarker+numvarphase;
+end
+% parameters are inidcated with 0 in the first column
+phaseindex = 1:numparameters;
+endpvarloc(:,phaseindex+refmarker) = [zeros(1,numparameters); phaseindex];
+end

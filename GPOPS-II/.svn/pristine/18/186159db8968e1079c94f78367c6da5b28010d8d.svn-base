@@ -1,0 +1,1691 @@
+\documentclass[10pt]{article}
+
+\usepackage{framed,fancybox,mcode}
+\usepackage{multicol,verbatim,overcite,psfrag}
+% \usepackage[pdftex,colorlinks]{hyperref}
+\usepackage{hyperref}
+\hypersetup{%
+colorlinks=true,
+linkcolor=black,
+urlcolor=cyan
+}%
+% \usepackage{palatino}
+\usepackage{epsfig,enumerate,amsmath,amsfonts,latexsym,graphics,graphicx,theorem,graphics}
+\usepackage{fancyhdr,subfig}
+\usepackage{makeidx,amssymb,longtable}
+\newcommand{\hs}[1]{\hspace*{ #1 mm}}
+% \renewcommand{\bibname}{References}
+% \renewcommand{\theequation}{\mbox{\thechapter--\arabic{equation}}}
+
+\theorembodyfont{\upshape}
+
+\pagestyle{fancy}
+% \renewcommand{\chaptermark}[1]{\markboth{Chapter \thechapter{.}\: #1}{}}
+% \renewcommand{\sectionmark}[1]{\markright{\thesection\ #1}}
+\fancyhf{}
+\fancyhead[LE,RO]{\small\bfseries\thepage}
+\fancyhead[LO]{\small\bfseries\rightmark}
+\fancyhead[RE]{\small\bfseries\leftmark}
+\fancypagestyle{plain}{%
+\fancyhead{} % get rid of headers
+\renewcommand{\headrulewidth}{0pt} % and the line
+}
+
+%\title{{\bf Quick Reference Guide for $\mathbb{GPOPS-II}$ Version 1.0:} \vspace{12pt}\\
+%  {\bf A General-Purpose MATLAB Toolbox for Solving Optimal Control Problems
+%    Using Sparse Nonlinear Programming and $hp$--Adaptive \\ Pseudospectral Methods}} 
+\title{\vspace{2.5in}{\bf $\mathbb{GPOPS-II}$ Version 1.0:} \vspace{12pt}\\
+  {\bf A General-Purpose MATLAB Toolbox for Solving Optimal Control
+    Problems Using the Radau Pseudospectral Method}} 
+
+\author{Michael A.~Patterson \\ Anil V.~Rao \\ \\ Gainesville, FL 32607 \\ USA \vspace{24pt} \\ May 2013 \vspace{36pt} \\Copyright \copyright~2013 Michael A.~Patterson and Anil V.~Rao.  All Rights Reserved.} 
+\date{}
+
+\oddsidemargin=0in
+\evensidemargin=0in
+\topmargin=1in
+\hoffset=0in
+\voffset=-1.5in
+\textheight=9in
+\textwidth=6.5in
+
+\headwidth=\textwidth
+\renewcommand{\headrulewidth}{0.25pt}
+\raggedbottom
+
+
+% \newcounter{example}[chapter]
+% \newcounter{question}[chapter]
+% {\theoremstyle{break}\theorembodyfont{\upshape}\newtheorem{example}{Example}[chapter]}
+% {\theoremstyle{break}\theorembodyfont{\upshape}\newtheorem{solution}{Solution to Example}[chapter]}
+% {\theoremstyle{plain}\theoremheaderfont{\normalsize\bfseries}\theorembodyfont{\upshape}\newtheorem{question}{\hspace{-0.25em}}[chapter]}
+
+% \newcommand{\examplenumber}{\thechapter--\theexample}
+% \renewcommand{\theexample}{\thechapter--\arabic{example}}
+% \renewcommand{\thesolution}{\thechapter--\arabic{solution}}
+% \renewcommand{\thequestion}{\thechapter--\arabic{question}}
+
+%\newcommand{\ecaption}[1]{\addcontentsline{loe}{example}{\protect\numberline{\theexample}#1}}
+
+% \renewcommand{\theequation}{\thechapter-\arabic{equation}}
+
+\usepackage{color}
+
+\definecolor{shadecolor}{gray}{0.99}
+\FrameRule=0.75pt
+\FrameSep=5pt
+\setlength{\fboxrule}{\FrameRule}
+\setlength{\fboxsep}{\FrameSep}
+
+\newenvironment{ovalframe}{%
+  \cornersize*{20pt}%
+  \setlength{\fboxsep}{6pt}%
+  \def\FrameCommand{\ovalbox}%
+  \MakeFramed{\advance\hsize-\width \FrameRestore}}%
+{\endMakeFramed}
+
+\newenvironment{shadedframe}{%
+  \def\FrameCommand{\fcolorbox{black}{shadecolor}}%
+%  \MakeFramed {\addtolength{\hsize}{-\width}\FrameRestore}}
+  \MakeFramed {\FrameRestore}}
+{\endMakeFramed}
+
+\newcommand{\bfblue}[1]{\textrm{{\color{blue}{\bf #1}}}}
+\newcommand{\slred}[1]{\textrm{\color{red}{\sl #1}}}
+
+\makeindex
+
+\begin{document}
+
+\setcounter{tocdepth}{1}
+
+\input{shortcuts}
+
+\maketitle
+\clearpage
+
+\section*{Preface}
+
+$\mathbb{GPOPS-II}$ is a general-pupose software for solving nonlinear
+optimal control problems that arise in a wide variety applications
+including engineering, economics, and medicine.  $\mathbb{GPOPS-II}$ uses
+some of the latest advancements in the area of pseudospectral methods
+for solving optimal control problems.  $\mathbb{GPOPS-II}$ employs an 
+$hp$-adaptive Radau pseudospectral Gaussian quadrature method where
+the collocation is performed at the Legendre-Gauss-Radau quadrature
+points.  $\mathbb{GPOPS-II}$ has been designed to work with the nonlinear
+programming (NLP) solvers SNOPT and IPOPT, and MATLAB mex files for
+both SNOPT and IPOPT are included with the software.  $\mathbb{GPOPS-II}$
+employs sparse finite-differencing to estimate all first and second
+derivatives required by the NLP solver.  The software has been
+designed to be extremely flexible, allowing a user to formulate an
+optimal control problem in a way that makes sense for the problem
+being solved.  Few, if any, restrictions have been placed on the
+manner in which a problem needs to be modeled.  As stated, the
+software is {\em general-purpose}, that is, it has not been developed
+for any specific type of problem.  While the developers of
+$\mathbb{GPOPS-II}$ make no guarantee as to the fitness of the software for
+any particular purpose, it is certainly hoped that software is useful
+for a variety of applications.
+
+\section*{Complete Overhaul from Previous Versions of GPOPS}
+
+$\mathbb{GPOPS-II}$ represents a complete overhaul from the GPOPS software that was
+released between 2008 and 2012.  Specifically, this new software,
+$\mathbb{GPOPS-II}$, is organized in a completely different manner from GPOPS and
+has significantly more functionality from GPOPS.  Furthermore, $\mathbb{GPOPS-II}$
+does {\em not} maintain backward compatibility with GPOPS.  While the
+authors of $\mathbb{GPOPS-II}$ realize that the lack of backward compatibility may
+be inconvenient for some users, the increased power and functionality
+of $\mathbb{GPOPS-II}$ will make it worth the short term inconvenience of the
+transition.  In order to have as smooth a transition as possible to
+the new software, the authors of $\mathbb{GPOPS-II}$ are happy to assist users of
+GPOPS in rewriting their code for $\mathbb{GPOPS-II}$.  
+
+\section*{Acknowledgments}
+
+The authors gratefully acknowledge support for this research from the 
+U.S.~Office of Naval Research (ONR) under Grant N00014-11-1-0068 and 
+from the U.S.~Defense Advanced Research Projects Agency (DARPA) Under 
+Contract HR0011-12-0011.
+
+\section*{Disclaimer}
+
+The views expressed are those of the authors and do not reflect the
+official policy or position of the Department of Defense or the
+U.S.~Government.   Furthermore, the contents of this document and the 
+corresponding software are provided ``as is'' without any
+merchantability or fitness for any particular application.  Neither
+authors nor their employers (past, present, or future) assume any
+responsibility whatsoever from any harm resulting from the
+software. The authors do, however, hope that users will find this
+software useful for research and other purposes.   
+
+\section*{Licensing Agreement}
+
+By downloading, using, modifying, or distributing $\mathbb{GPOPS}2$,
+you agree to the terms of this license agreement.  This license gives
+you extremely GENEROUS RIGHTS, so if you do not agree to the terms of
+this agreement, you may not proceed further with using, using,
+modifying, or distributing $\mathbb{GPOPS}2$.  
+
+\subsection*{License for $\mathbb{GPOPS-II}$ Software}
+
+PLEASE READ THE FOLLOWING TERMS AND CONDITIONS CAREFULLY BEFORE
+PROCEEDING TO DOWNLOAD $\mathbb{GPOPS-II}$!
+
+This page constitutes the official license for the General-Purpose
+Pseudospectral Optimal Control Software (hereafter referred to as
+“$\mathbb{GPOPS-II}$”).  By downloading, using, modifying, or distributing
+$\mathbb{GPOPS-II}$ you are agreeing to all of the the terms and
+conditions described henceforth.  Do not proceed with the download of
+$\mathbb{GPOPS-II}$ you do not agree with any of the terms and
+conditions in this  agreement.   
+
+If you are either a student or employee at an academic institution
+(that is, K-12 or degree-granting higher-learning institution), or an
+employee of the U.S. Federal Government, U.S. State Government, or
+U.S. Local Government, $\mathbb{GPOPS-II}$ is available
+free-of-charge provided you are using it for non-commercial research
+and development.  This free-of-charge non-commercial use license comes
+with the following rules:
+\begin{itemize}
+\item You may use the software for any non-commercial purpose
+\item You may not make derivative works of the software and you may
+  not redistribute the software beyond the license you have been
+  granted.  
+\item You must leave all existing copyright notices, warranty
+  disclaimers, and license terms in place in any changes that you make
+\item You must provide assurance that you will not make a profit of
+ any kind from the distribution or re-distribution of $\mathbb{GPOPS-II}$
+\end{itemize}
+If you are an employee at a not-for-profit or commercial institution,
+use of $\mathbb{GPOPS-II}$ requires a licensing fee, and this fee
+structure applies regardless of the kind of work being performed at your
+profit-making institution.  The not-for-profit licensing fee structure is
+as follows:
+\begin{itemize}
+\item Individual License:  \$500.00 for purchase of any major release of $\mathbb{GPOPS-II}$.  
+\item Single Department License:  \$2500.00 for purchase of any major release of $\mathbb{GPOPS-II}$.  
+\item Company-Wide License:  \$5000.00 for purchase of any major release of $\mathbb{GPOPS-II}$.  
+\end{itemize}
+The commercial licensing fee structure is as follows:
+\begin{itemize}
+\item Individual License:  \$1000.00 for purchase of any major release of $\mathbb{GPOPS-II}$.  
+\item Single Department License:  \$5000.00 for purchase of any major release of $\mathbb{GPOPS-II}$.  
+\item Company-Wide License:  \$10000.00 for purchase of any major release of $\mathbb{GPOPS-II}$.  
+\end{itemize}
+DISCLAIMER:  $\mathbb{GPOPS-II}$ is provided “as-is” with no
+warranties, none of any kind.  Furthermore, the authors may not be
+held liable for any use of $\mathbb{GPOPS-II}$, and you may not 
+recover any damages for any reason whatsoever. 
+
+\subsection*{Distribution of $\mathbb{GPOPS-II}$}
+
+$\mathbb{GPOPS-II}$ is free for academic and U.S.~Government use.  All
+others (that is, not-for-profit or commercial institutions) must pay a
+licensing fee.  Any not-for-profit or commercial use is limited to use
+within the institution (although the results obtained using
+$\mathbb{GPOPS-II}$ may be presented outside of the institution).
+Regardless of the type of license you are granted, redistribution of
+$\mathbb{GPOPS-II}$ is strictly prohibited.  In addition, there are
+some things that you must shoulder:
+\begin{itemize}
+\item You get {\em no warranties} of any kind;
+\item If the software damages you in any way, you may only recover
+direct damages up to the amount you paid for it (that is, you get zero
+if you did not pay anything for the software);
+\item You may not recover any other damages, including those called
+"consequential damages." (The state or country where you live may not
+allow you to limit your liability in this way, so this may not apply
+to you).
+\end{itemize}
+{\em $\mathbb{GPOPS-II}$ is provided ``as is'' without warranty
+of any kind, expressed or implies, including but not limited to the 
+warranties of merchantability, fitness for a particular purpose, and
+non-infringement.  In no event shall the authors or copyright holders
+be liable for any claim, damages, or other liability, whether in an
+action of contract, tort, or otherwise, arising from, out of, or in
+connection with the software or the use or dealings in the software}.
+
+\clearpage
+\setcounter{tocdepth}{2}
+\tableofcontents
+
+\clearpage
+
+\section{Introduction to the General-Purpose Software $\mathbb{GPOPS-II}$}
+
+A $P$-phase optimal control problem can be stated in the following
+general form.  Determine the state, $\bfy^{(p)}(t)\in\mathbb{R}^{n_y^{(p)}}$, control,
+$\bfu^{(p)}(t)\in\mathbb{R}^{n_u^{(p)}}$, initial time, $t_0^{(p)}\in\mathbb{R}$, final time, $t_f^{(p)}\in\mathbb{R}$,
+integrals, $\bfq^{(p)}\in\mathbb{R}^{n_q^{(p)}}$, in each phase $p\in[1,\ldots,P]$, and the
+static parameters, $\bfs\in\mathbb{R}^{n_s}$, that minimize the cost functional  
+\begin{equation}
+  J = \phi\left[\bfy^{(1)}(t_0^{(1)}),\ldots,\bfy^{(P)}(t_0^{(P)}),t_0^{(1)},\ldots,t_0^{(P)},\bfy^{(1)}(t_f^{(1)}),\ldots,\bfy^{(P)}(t_f^{(P)}),t_f^{(1)},\ldots,t_f^{(P)},\bfq^{(1)},\ldots,\bfq^{(P)},\bfs\right]
+\end{equation}
+subject to the dynamic constraints
+\begin{equation}
+  \dbfy^{(p)} = \bfa^{(p)}\left[\bfy^{(p)},\bfu^{(p)},t^{(p)},\bfs\right], \qquad (p=1,\ldots,P),
+\end{equation}
+the event constraints
+\begin{equation}
+  \small
+  \begin{array}{c}
+  \bfb_{\min}^{(g)} \leq
+\bfb\left[\bfy^{(1)}(t_0^{(1)}),\ldots,\bfy^{(P)}(t_0^{(P)}),t_0^{(1)},\ldots,t_0^{(P)},\bfy^{(1)}(t_f^{(1)}),\ldots,\bfy^{(P)}(t_f^{(P)}),t_f^{(1)},\ldots,t_f^{(P)},\bfq^{(1)},\ldots,\bfq^{(P)},\bfs\right]
+  \leq \bfb_{\max}^{(g)}, \\ (g=1,\ldots,G), \end{array}
+\end{equation}
+the inequality path constraints
+\begin{equation}
+  \bfc_{\min}^{(p)} \leq
+  \bfc^{(p)}\left[\bfy^{(p)},\bfu^{(p)},t^{(p)},\bfs\right]\leq \bfc_{\max}^{(p)}, \qquad   (p=1,\ldots,P),
+\end{equation}
+and the integral constraints
+\begin{equation}
+  \bfq_{\min}^{(p)} \leq \bfq^{(p)} \leq \bfq_{\max}^{(p)}, \quad (p=1,\ldots,P)
+\end{equation}
+where
+\begin{equation}
+  q_i^{(p)} = \int_{t_0^{(p)}}^{t_f^{(p)}} Q_i\left[\bfy^{(p)},\bfu^{(p)},t^{(p)},\bfs\right]dt,\quad (i=1,\ldots,n_q^{(p)};p=1,\ldots,P).
+\end{equation}
+While much of the time a user may want to solve a problem consisting of
+multiple phases, it is important to note that the phases {\em need not
+  be sequential}.  To the contrary, any two phases may be linked 
+provided that the independent variable does not change direction (\ie the
+independent variable moves in the same direction during each phase that is
+linked).  
+
+\subsection{Radau Pseudospectral Method Employed by $\mathbb{GPOPS-II}$}
+
+The method employed by $\mathbb{GPOPS-II}$ is an $hp$-adaptive version of
+the {\em Radau pseudospectral method}.  The Radau pseudospectral
+method is an orthogonal collocation Gaussian quadrature implicit
+integration method where  collocation is performed at the {\em
+  Legendre-Gauss-Radau} points. The theory behind the Radau
+pseudospectral method used in $\mathbb{GPOPS-II}$ can be found in 
+Refs.~\citen{Garg1}, \citen{Garg2}, \citen{Garg3}, and
+\citen{Patterson2011}.   
+
+\subsection{Organization of $\mathbb{GPOPS-II}$}
+
+$\mathbb{GPOPS-II}$ is organized as follows.  In order to specify the
+optimal control problem that is to be solved, the user must write
+the following MATLAB functions: (1) an endpoint function; and (2) a
+continuous function.  The endpoint function defines how the the start and/or
+terminus in any of the phases in the problem, the integrals in any
+phase of the problem and the static parameters are related to one
+another.  The endpoint function also defines the cost to be minimized.
+The {\em continuous} function defines the evolution of the dynamics in
+any phase of the problem, the integrands that are required to compute
+any integrals in any phase of the problem, and any path constraints in
+any phase of the problem.  Next, the user must specify the lower and
+upper limits on the following quantities: 
+\begin{enumerate}[(1)]
+  \item the time at the start and terminus of a phase; 
+  \item the state at the start of a phase, during a phase, and at the
+    terminus of a phase;
+ \item the control during a phase;
+  \item the path constraints
+ \item the event constraints;
+  \item the static parameters.  
+\end{enumerate}
+The remainder of this document is devoted to describing in detail the
+MATLAB syntax for describing the optimal control problem and each of
+the constituent functions. 
+
+\subsection{Color Highlighting Throughout Document}
+
+The following notation is adopted for use throughout the remainder of
+this document.  First, all user-specified names will be denoted by \slred{red
+  slanted} characters.  Second, any item denoted by \bfblue{blue
+  boldface} characters  are {\underline pre-defined} and cannot be changed by
+the user.  Users who do not have color rendering capability will see
+only slanted and boldface characters, respectively.  
+
+
+\section{Constructing an Optimal Control Problem Using $\mathbb{GPOPS-II}$}
+
+We now proceed to describe the constructs required to specify an
+optimal control problem in $\mathbb{GPOPS-II}$.  We note that the key
+MATLAB programming elements used in constructing an optimal control
+problem in $\mathbb{GPOPS-II}$ are {\em structure} and {\em arrays of structures}.
+In this Section we provide the details of constructing a problem using
+$\mathbb{GPOPS-II}$.  First, the call to $\mathbb{GPOPS-II}$ s given as
+\begin{center}
+ \slred{output}=\bfblue{gpops2}(\slred{input}),
+\end{center} 
+where \slred{input} is a user-defined structure that contains all
+of the information about the optimal control problem to be solved and
+\slred{output} is a structure that contains the information obtained
+by solving the optimal control problem.  In this section we describe
+the contents of the structures \slred{input} and \slred{output}.  
+
+\subsection{Syntax for Input Structure \bfblue{setup}  \label{sect:input-syntax}} 
+
+The user-defined structure \slred{setup} contains required fields and
+optional fields.  The required fields in the structure \slred{input}
+are as follows: 
+\begin{itemize}
+\item \bfblue{name}:  a string {\em with no blank spaces} that
+ contains the name of the problem;  
+\item \bfblue{functions}:  a structure that contains the name of the
+  continuous function and the endpoint function (see Section
+  \ref{sect:functions} for further details); 
+\item \bfblue{bounds}:  an structure that contains the information
+  about the lower and upper bounds on the different variables and 
+  constraints in the problem (see Section \ref{sect:bounds} for further
+  details); 
+\item \bfblue{guess}:  an structure that contains a guess of the
+  time, state, control, integrals, and static parameters in the
+  problem (see Section \ref{sect:guess} for further details); 
+\end{itemize}
+In addition to the above required fields in the structure
+\slred{setup}, {\em optional} fields in the \slred{setup} structure
+may be specified (these fields may be provided by the user if it may
+of benefit for a particular problem of interest). The optional fields
+in the structure \slred{setup} are given as follows along with the
+list of possible values and the default values:
+\begin{itemize}
+\item \bfblue{auxdata}:  a structure containing auxiliary data that
+  may be used by different functions in the problem.  Including
+  \bfblue{auxdata} eliminates any need to specify global variables for
+  use in the problem.  The following table provided the possible
+ values and their defaults for the field \slred{setup}.\bfblue{auxdata}:
+\begin{center}
+  \begin{tabular}{|c|c|c|} \hline
+  {\bf Field} & {\bf Possible Values} & {\bf Default} \\\hline
+  \slred{setup}.\bfblue{auxdata} & Any Problem-Specific Data & Not
+  Provided \\ \hline
+\end{tabular}
+\end{center}
+\item \bfblue{derivatives}:   a structure that specifies the
+  derivative approximation to be used by the NLP solver and the
+  derivative order ('first' or 'second') to be used by the NLP
+  solver.  The field \slred{setup}.\bfblue{derivatives} contains three
+  fields \bfblue{supplier}, \bfblue{derivativelevel}, and \bfblue{dependencies} where the field  
+  \slred{setup}.\bfblue{derivatives}.\bfblue{supplier} contains the
+  type of derivative approximation , the field 
+  \slred{setup}.\bfblue{derivatives}.\bfblue{derivativelevel} contains
+  the derivative order, while the field \slred{setup}.\bfblue{derivatives}.\bfblue{dependencies}
+  determines how the dependencies are found.
+   The following table provided the possible
+ values and their defaults for the field \slred{setup}.\bfblue{derivatives}:
+  \begin{center}
+ \begin{tabular}{|c|c|c|} \hline
+ {\bf Field} & {\bf Possible Values} & {\bf Default} \\\hline
+ \slred{setup}.\bfblue{derivatives}.\bfblue{supplier} & 'sparseFD', 'sparseBD' or 'sparseCD' & 'sparseFD' \\ \hline
+ \slred{setup}.\bfblue{derivatives}.\bfblue{derivativelevel} & 'first' or 'second' & 'first' \\ \hline
+ \slred{setup}.\bfblue{derivatives}.\bfblue{dependencies} & 'full', 'sparse' or 'sparseNaN' & 'sparseNaN' \\ \hline
+\end{tabular}
+\end{center}
+\item \bfblue{scales}: a structure that specifies the type of scaling
+  to be used when solving the problem.  [{\bf Possible Values:}
+ 'none' or 'automatic-bounds'; {\bf Default:} 'none'];
+  \begin{center}
+\begin{tabular}{|c|c|c|} \hline
+{\bf Field} & {\bf Possible Values} & {\bf Default} \\\hline
+\slred{setup}.\bfblue{scales} & 'none' or 'automatic-bounds' & 'none' \\ \hline
+\end{tabular}
+\end{center}
+\item \bfblue{mesh}: a structure that specifies the
+information as to the type of mesh refinement method to be used and  
+ the mesh refinement accuracy tolerance, as well as the initial mesh.  The structure
+  \slred{setup}.\bfblue{mesh} contains the fields
+  \bfblue{method}, \bfblue{tolerance}, \bfblue{maxiteration}, and \bfblue{phase}.  The field
+  \slred{setup}.\bfblue{mesh}.\bfblue{method} is a string that
+  specified the particular mesh refinement method to be used, while
+  the field \slred{setup}.\bfblue{mesh}.\bfblue{tolerance} contains the
+  desired accuracy tolerance of the mesh, while the field \slred{setup}.\bfblue{mesh}.\bfblue{maxiterations}
+  contains the maximum number of allowed mes iterations.
+  \begin{center}
+   \begin{tabular}{|c|c|c|} \hline
+   {\bf Field} & {\bf Possible Values} & {\bf Default} \\\hline
+   \slred{setup}.\bfblue{mesh}.\bfblue{method} & 'hp' or 'hp1' & 'hp1' \\\hline
+  \slred{setup}.\bfblue{mesh}.\bfblue{tolerance} &
+ Positive Number Between $0$ and $1$ & $10^{-3}$ \\\hline
+  \slred{setup}.\bfblue{mesh}.\bfblue{maxiteration} &
+  Non-Negative Integer & 10 \\ \hline
+\end{tabular}
+\end{center}
+  The field \bfblue{mesh}.\bfblue{phase} specifies the initial mesh intervals 
+  in a given phase and the number of collocation (Radau) points in
+  each mesh interval.  The field \slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{fraction}
+  contains the mesh intervals for each phase $p=1,\ldots,P$,
+  where the mesh intervals are specified in a row
+  vector that provides the fraction of a scaled interval $[0,1]$ that
+  corresponds to each mesh interval.  The field \slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{colpoints}
+  contains the number of collocation points in each phase $p=1,\ldots,P$,
+  where the number of collocation points in each mesh interval is also specified as a
+  row vector such that the $i^{th}$ entry in \slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{colpoints}
+  corresponds to the $i^{th}$ entry in \slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{fraction}.
+  \begin{center}
+\begin{tabular}{|c|c|c|} \hline
+{\bf Field} & {\bf Possible Values} & {\bf Default} \\ \hline
+\slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{fraction} &\begin{tabular}{c} Row
+  Vector of Length $M\geq 1$ of Positive \\
+  Numbers $>0$ and $<1$ that Sum to Unity \end{tabular} & 0.1*ones(1,10) \\ \hline
+\slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{colpoints} & \begin{tabular}{c}
+  Row Vector of Length $M\geq 1$ \\ of Positive Integers $>1$ and
+  $<10$ \\ ($M$ is the same as in
+  \slred{setup}.\bfblue{mesh}.\bfblue{phase($p$)}.\bfblue{fraction}) \end{tabular} & 4*ones(1,10) \\ \hline
+\end{tabular}
+\end{center}
+\item \bfblue{nlp}: a structure that specifies the NLP solver to be
+  used and the options to be used within the chosen NLP solver.  
+ \slred{setup}.\bfblue{nlp} contains the field \bfblue{solver} and
+ \bfblue{options}.  The field \bfblue{solver} contains a string
+ indicating the NLP solver to be used.  The field \bfblue{options} is
+ a structure that contains the NLP solver options that can be set
+ directly from $\mathbb{GPOPS-II}$. 
+\begin{center}
+   \begin{tabular}{|c|c|c|} \hline
+   {\bf Field} & {\bf Possible Values} & {\bf Default} \\\hline
+   \slred{setup}.\bfblue{nlp}.\bfblue{solver} & 'snopt' or 'ipopt' & 'ipopt' \\\hline
+   \slred{setup}.\bfblue{nlp}.\bfblue{options}.\bfblue{ipopt}.\bfblue{linear\_solver} & 'mumps' or 'ma57' & 'mumps' \\\hline
+   \slred{setup}.\bfblue{nlp}.\bfblue{options}.\bfblue{tolerance} & Positive Real Number & $10^{-7}$ \\\hline
+\end{tabular}
+\end{center}
+\end{itemize} 
+It is important to note that $\mathbb{GPOPS-II}$ has been designed so that
+the independent variable must be monotonically {\em increasing} in
+each phase of the problem.  
+
+\subsection{Syntax for Structure \slred{setup}.\bfblue{functions} \label{sect:functions}}
+
+The syntax for specifying the names of the MATLAB functions given in
+\slred{setup}.\bfblue{functions} given as follows:
+\begin{displaymath}
+  \begin{array}{lcl}
+   \slred{setup}.\bfblue{functions.continuous} & = & \slred{@continuousfun.m} \\
+   \slred{setup}.\bfblue{functions.endpoint} & = & \slred{@endpointfun.m} \\
+ \end{array}
+\end{displaymath}
+The details of the syntax for each function are provided in Sections
+\ref{sect:endpointSyntax} and \ref{sect:continuousSyntax}.  
+
+\subsection{Syntax for \bfblue{bounds} Structure \label{sect:bounds}}
+
+Once the user-defined structure \slred{input} has been defined, the 
+next step in setting up a problem for use with $\mathbb{GPOPS-II}$ is to
+create the structure \slred{input}.\bfblue{bounds}. The structure
+\bfblue{bounds} contains the following {\em three} fields:
+\bfblue{phase}, \bfblue{parameters}, and \bfblue{eventgroup}.  The 
+field \slred{input}.\bfblue{bounds}.\bfblue{phase} is an array of structures
+of length $P$ (where $P$ is the number of phases) that specifies the
+bounds on the time, state, control, path constraints, and integrals in
+each phase $p=1,\ldots,P$ of the problem.  The field
+\slred{input}.\bfblue{bounds}.\bfblue{parameters} contains the lower
+and upper bounds on the static parameters in the problem.  The field 
+\slred{input}.\bfblue{bounds}.\bfblue{eventgroup} is an array of
+structures of length $G$, where $G$ is the number of event groups in
+the problem.  The $p^{th}$ element in the array of structures
+\slred{input}.\bfblue{bounds}.\bfblue{phase} contains the following fields:
+\begin{itemize}
+\item \bfblue{bounds.phase($p$).initialtime.lower} and
+  \bfblue{bounds.phase($p$).initialtime.upper}: scalars that contain the
+  information about the lower and upper bounds on the initial time in
+  phase $p\in[1,\ldots,P]$.  The scalars
+  \bfblue{bounds.phase($p$).initialtime.lower} and
+  \bfblue{bounds.phase($p$).initialtime.upper} have the following form: 
+ \begin{displaymath}
+   \begin{array}{lcl}
+     \bfblue{bounds.phase($p$).initialtime.lower} & = &  t_0^{\textrm{lower}} \\
+     \bfblue{bounds.phase($p$).initialtime.upper} & = &  t_0^{\textrm{upper}}
+  \end{array}
+ \end{displaymath}
+\item \bfblue{bounds.phase($p$).finaltime.lower} and \bfblue{bounds($p$).finaltime.upper}:
+ scalars that contain the information about the lower and upper
+ bounds on the final time in phase $p\in[1,\ldots,P]$.  The
+ scalars \bfblue{bounds.phase($p$).finaltime.lower} and \bfblue{bounds.phase($p$).finaltime.upper}
+ have the following form:
+ \begin{displaymath}
+   \begin{array}{lcl}
+     \bfblue{bounds.phase($p$).finaltime.lower} & = &  t_f^{\textrm{lower}} \\
+     \bfblue{bounds.phase($p$).finaltime.upper} & = &  t_f^{\textrm{upper}}
+  \end{array}
+ \end{displaymath}
+\item \bfblue{bounds.phase($p$).initialstate.lower} and
+  \bfblue{bounds.phase($p$).initialstate.upper}: 
+row vectors of length $n_y^{(p)}$ that contain the lower and upper
+bounds on the initial state in phase $p\in[1,\ldots,P]$.  The row
+vectors \bfblue{bounds.phase($p$).initialstate.lower} and
+\bfblue{bounds.phase($p$).initialstate.upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.phase($p$).initialstate.lower} & = &
+  \left[\begin{array}{ccc} y_{0,1}^{\textrm{lower}} & \cdots & y_{0,n_y^{(p)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.phase($p$).initialstate.upper} & = &
+  \left[\begin{array}{ccc} y_{0,1}^{\textrm{upper}} & \cdots & y_{0,n_y^{(p)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.phase($p$).state.lower} and \bfblue{bounds.phase($p$).state.upper}:
+row vectors of length $n_y^{(p)}$ that contain the lower and upper
+bounds on the state during phase $p\in[1,\ldots,P]$.  The row
+vectors \bfblue{bounds.phase($p$).state.lower} and
+\bfblue{bounds.phase($p$).state.upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.phase($p$).state.lower} & = &
+  \left[\begin{array}{ccc} y_{1}^{\textrm{lower}} & \cdots & y_{n_y^{(p)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.phase($p$).state.upper} & = &
+  \left[\begin{array}{ccc} y_{1}^{\textrm{upper}} & \cdots & y_{n_y^{(p)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.phase($p$).finalstate.lower} and \bfblue{bounds.phase($p$).finalstate.upper}:
+row vectors of length $n_y^{(p)}$ that contain the lower and upper
+bounds on the final state in phase $p\in[1,\ldots,P]$.  The row
+vectors \bfblue{bounds.phase($p$).finalstate.lower} and
+\bfblue{bounds.phase($p$).finalstate.upper} have the following form: 
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.phase($p$).finalstate.lower} & = &
+  \left[\begin{array}{ccc} y_{f,1}^{\textrm{lower}} & \cdots & y_{f,n_y^{(p)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.phase($p$).finalstate.upper} & = &
+  \left[\begin{array}{ccc} y_{f,1}^{\textrm{upper}} & \cdots & y_{f,n_y^{(p)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.phase($p$).control.lower} and \bfblue{bounds.phase($p$).control.upper}:
+row vectors of length $n_y^{(p)}$ that contain the lower and upper
+bounds on the control during phase $p\in[1,\ldots,P]$.  The row
+vectors \bfblue{bounds.phase($p$).control.lower} and
+\bfblue{bounds.phase($p$).control.upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.phase($p$).control.lower} & = &
+  \left[\begin{array}{ccc} u_{1}^{\textrm{lower}} & \cdots & u_{n_u^{(p)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.phase($p$).control.upper} & = &
+  \left[\begin{array}{ccc} u_{1}^{\textrm{upper}} & \cdots & u_{n_u^{(p)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.phase($p$).path.lower} and \bfblue{bounds.phase($p$).path.upper}:
+row vectors of length $n_c^{(p)}$ that contain the lower and upper
+bounds on the path constraints during phase $p\in[1,\ldots,P]$.  The row
+vectors \bfblue{bounds.phase($p$).path.lower} and
+\bfblue{bounds.phase($p$).path.upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.phase($p$).path.lower} & = &
+  \left[\begin{array}{ccc} c_{1}^{\textrm{lower}} & \cdots & c_{n_u^{(p)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.phase($p$).path.upper} & = &
+  \left[\begin{array}{ccc} c_{1}^{\textrm{upper}} & \cdots & c_{n_u^{(p)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.phase($p$).integral.lower} and \bfblue{bounds.phase($p$).integral.upper}:
+row vectors of length $n_q^{(p)}$ that contain the lower and upper
+bounds on the integrals in phase $p\in[1,\ldots,P]$.  The row
+vectors \bfblue{bounds.phase($p$).integral.lower} and
+\bfblue{bounds.phase($p$).integral.upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.phase($p$).integral.lower} & = &
+  \left[\begin{array}{ccc} q_{1}^{\textrm{lower}} & \cdots & q_{n_q^{(p)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.phase($p$).integral.upper} & = &
+  \left[\begin{array}{ccc} q_{1}^{\textrm{upper}} & \cdots & q_{n_q^{(p)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.parameters.lower} and \bfblue{bounds.parameters.upper}:
+row vectors of length $n_s$ that contain the lower and upper
+bounds on the static parameters in the problem.  The row
+vectors \bfblue{bounds.parameters.lower} and 
+\bfblue{bounds.parameters.upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.parameters.lower} & = &
+  \left[\begin{array}{ccc} s_{1}^{\textrm{lower}} & \cdots & s_{n_s}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.parameters.upper} & = &
+  \left[\begin{array}{ccc} s_{1}^{\textrm{upper}} & \cdots & s_{n_s}^{\textrm{upper}}\end{array}\right] \\
+\end{array}
+\end{displaymath}
+\item \bfblue{bounds.eventgroup($g$).lower} and \bfblue{bounds.eventgroup($g$).upper}:
+row vectors of length $n_b^{(g)}$ that contain the lower and upper
+bounds on the group $g=1,\ldots,G$ of event constraints.  The row
+vectors \\ \bfblue{bounds.eventgroup($g$).lower} and
+\bfblue{bounds.eventgroup($g$).upper} have the following form:
+\begin{displaymath}
+ \begin{array}{lcl}
+   \bfblue{bounds.eventgroup($g$).lower} & = & \left[\begin{array}{ccc} b_{1}^{\textrm{lower}} & \cdots & b_{n_b^{(g)}}^{\textrm{lower}}\end{array}\right] \\
+   \bfblue{bounds.eventgroup($g$).upper} & = & \left[\begin{array}{ccc} b_{1}^{\textrm{upper}} & \cdots & b_{n_b^{(g)}}^{\textrm{upper}}\end{array}\right]
+\end{array}
+\end{displaymath}
+\end{itemize}
+{\noindent}{\bf Note:} any fields that do not apply to a problem (for
+example, a problem with no path constraints) should be omitted
+completely.  
+
+\subsection{Syntax of Endpoint Function \slred{setup}.\bfblue{functions}.\bfblue{endpoint}}\label{sect:endpointSyntax}
+
+The syntax used to evaluate the user-defined endpoint function defined
+by the function handle \slred{setup}.\bfblue{functions}.\bfblue{endpoint} is given as follows:
+\begin{center}
+  \noindent{\bf function output=endpointfun(input)}
+\end{center}
+The input \slred{input} is a structure that contains the fields
+\bfblue{phase}, \bfblue{auxdata}, and \bfblue{parameter} if the problem has parameters.  The field
+\slred{input}.\bfblue{phase} is an array of structures of length $P$
+(where $P$ is the number of phases) such that the $p^{th}$ element of 
+\slred{input}.\bfblue{phase} contains the following fields:
+\begin{itemize}
+  \item \slred{input}.\bfblue{phase($p$).initialtime}:  a scalar that contains the initial time in phase $p=1,\ldots,P$;
+ \item \slred{input}.\bfblue{phase($p$).finaltime}:  a scalar that contains the final time in phase $p=1,\ldots,P$;
+ \item \slred{input}.\bfblue{phase($p$).initialstate}:  a row vector of length $n_y^{(p)}$ that contains the initial state in phase $p=1,\ldots,P$;
+ \item \slred{input}.\bfblue{phase($p$).finalstate}:  a row vector of length $n_y^{(p)}$ that contains the final state in phase $p=1,\ldots,P$;
+ \item \slred{input}.\bfblue{phase($p$).integral}:  a row vector of length $n_d^{(p)}$ that contains the integrals in phase $p=1,\ldots,P$;
+ \item \slred{input}.\bfblue{parameter}:  a row vector of length $n_s$ that contains the static parameters in phase $p=1,\ldots,P$;
+\end{itemize}
+The field \slred{input}.\bfblue{auxdata} contains the same
+information as the field \slred{input}.\bfblue{auxdata} that was
+specified in the structure \slred{input} that was used to specify the
+information for the entire problem.   The output \slred{output} is a
+structure that contains the fields \bfblue{objective} and
+\bfblue{eventgroup}.  The fields \slred{output}.\bfblue{objective} and
+\slred{output}.\bfblue{eventgroup} are given as follows:
+\begin{itemize}
+  \item \slred{output}.\bfblue{objective}: a scalar that contains the
+   result of computing the objective function on the current call to 
+   \slred{input}.\bfblue{functions}.\bfblue{endpoint};
+ \item \slred{output}.\bfblue{eventgroup}:  an array of structures of
+   length $G$ (where $G$ is the number of event groups) such that the
+$g^{th}$ element in \slred{output}.\bfblue{eventgroup} is a row vector
+of length $n_b^{(g)}$ that contains the result of evaluating $g^{th}$
+group of event constraints at the values given in the call to the
+function \slred{input}.\bfblue{functions}.\bfblue{endpoint};
+\end{itemize}
+
+\subsection{Syntax for Continuous Function \slred{setup}.\bfblue{functions}.\bfblue{continuous} \label{sect:continuousSyntax}}
+
+The syntax used to evaluate the continuous functions defined by the
+function handle \slred{setup}.\bfblue{functions}.\bfblue{continuous}
+is given as follows:
+\begin{center}
+  \noindent{\bf function output=continuousfun(input)}
+\end{center}
+The input \slred{input} is a structure that contains the fields
+\bfblue{phase} and \bfblue{auxdata}.  The field
+\slred{input}.\bfblue{phase} is an array of structures of length $P$ 
+(where $P$ is the number of phases) such that the $p^{th}$ element of
+\slred{input}.\bfblue{phase} contains the following fields:
+\begin{itemize}
+  \item \slred{input}.\bfblue{phase($p$)}.\bfblue{time}:  a column vector of
+   length $N^{(p)}$, where $N^{(p)}$ is the number of collocation points in phase $p=1,\ldots,P$.  
+  \item \slred{input}.\bfblue{phase($p$)}.\bfblue{state}:  a matrix of size 
+  $N^{(p)}\times n_y^{(p)}$, where $N^{(p)}$ and $n_y^{(p)}$ are,
+  respectively, the number of collocation points and the 
+  dimension of the state in phase $p=1,\ldots,P$;
+  \item \slred{input}.\bfblue{phase($p$)}.\bfblue{control}:  a matrix
+   of size $N^{(p)}\times n_u^{(p)}$, where $N^{(p)}$ and $n_u^{(p)}$ are,
+ respectively, the number of collocation points and the 
+ dimension of the control in phase $p=1,\ldots,P$;
+  \item \slred{input}.\bfblue{phase($p$)}.\bfblue{parameter}:  a matrix
+   of size $N^{(p)}\times n_s$, where $N^{(p)}$ is the number of
+   collocation points in phase $p=1,\ldots,P$ and and $n_s$ is the
+   dimension of the static parameter.  [{\bf Note:}  see below for
+   the reason why the static parameter has a size $N^{(p)}\times n_s$];
+\end{itemize}
+Finally, \slred{output} is an array of structures of length $P$ (where
+$P$ is the number of phases) such that the $p^{th}$ element of
+\slred{output} contains the following fields:
+\begin{itemize}
+\item \slred{output}.\bfblue{dynamics}:  a matrix of size $N^{(p)}\times
+n_y^{(p)}$, where $N^{(p)}$ and $n_y^{(p)}$ are, respectively, the
+number of collocation points and the dimension of the state in phase
+$p=1,\ldots,P$;   
+\item \slred{output}.\bfblue{path}:  a matrix of size $N^{(p)}\times
+n_c^{(p)}$, where $N^{(p)}$ and $n_c^{(p)}$ are, respectively, the
+number of collocation points and the number of path constraints 
+in phase $p=1,\ldots,P$;   
+\item \slred{output}.\bfblue{integrand}:  a matrix of size $N^{(p)}\times
+n_d^{(p)}$, where $N^{(p)}$ and $n_d^{(p)}$ are, respectively, the
+number of collocation points and the number of integrals 
+in phase $p=1,\ldots,P$;   
+\end{itemize}
+
+{\noindent}{\bf IMPORTANT NOTE:}  While it may seem a bit odd, the
+field \slred{input}.\bfblue{phase($p$)}.\bfblue{parameter} is actually
+specified as if it were phase-dependent while it actually does not
+depend upon the phase because the static parameters themselves are
+independent of the phase.  Furthermore, while the static parameters
+are defined as a single row vector, the arrays
+\slred{input}.\bfblue{phase($p$)}.\bfblue{parameter} are actually
+matrices of size $N^{(p)}\times n_s$, where $N^{(p)}$ is the number of
+collocation points in each phase.  The reason for making the static
+parameters phase dependent and providing them as an array with
+$N^{(p)}$ rows is to improve the efficiency with which the NLP
+derivatives are computed.  
+
+\subsection{Specifying an Initial Guess of The Solution \label{sect:guess}}
+
+The field \bfblue{guess} of the user-defined structure \slred{setup} 
+contains the initial guess for the problem.  The field \bfblue{guess}
+is a then structure that contains the fields \bfblue{phase} and
+\bfblue{parameter}.  Assume that $M^{(p)}$ is the number of values
+used in the guess for the time, state, and control in phase
+$p=1,\ldots,P$.  The field \slred{setup}.\bfblue{guess}.\bfblue{phase}
+is an array of structures of length $P$ such that the $p^{th}$ element of
+\slred{setup}.\bfblue{guess}.\bfblue{phase} contains the following
+fields: 
+\begin{itemize}
+\item \slred{setup}.\bfblue{guess}.\bfblue{phase($p$)}.\bfblue{time}:
+  a column vector of length $M^{(p)}$ in phase $p=1,\ldots,P$;
+\item \slred{setup}.\bfblue{guess}.\bfblue{phase($p$)}.\bfblue{state}:
+  a matrix of size $M^{(p)}\times n_y^{(p)}$, where $n_y^{(p)}$ is the
+  dimension of the state in phase $p=1,\ldots,P$; 
+\item \slred{setup}.\bfblue{guess}.\bfblue{phase($p$)}.\bfblue{control}:
+ a matrix of size $M^{(p)}\times n_u^{(p)}$, where $n_u^{(p)}$  is the
+ dimension of the control in phase $p=1,\ldots,P$;  
+\item \slred{setup}.\bfblue{guess}.\bfblue{phase($p$)}.\bfblue{integral}:
+ a row vector of length $n_d^{(p)}$, where $n_d^{(p)}$ is the number
+ of integrals in phase $p=1,\ldots,P$; 
+\item \slred{setup}.\bfblue{guess}.\bfblue{parameter}:  a row vector
+  of length size $n_s$, where $n_s$ is the number of static parameters
+  in the problem.  
+\end{itemize}
+It is noted that the column vector of time points specified in each 
+phase $p=1,\ldots,P$ in the field
+\slred{setup}.\bfblue{guess}.\bfblue{phase($p$)}.\bfblue{time} must be
+monotonically increasing.  
+
+\subsection{Scaling of Optimal Control Problem\label{sect:scaling}}
+
+It is always preferable for the user to scale an optimal control
+problem of interest based on knowledge and insight of the problem.  It
+is understood, however, that manually scaling a problem may be an
+iterative process and consume a great deal of time and effort.   While
+it is beyond the scope of the software to provide a general procedure
+for scaling, in an attempt to reduce the burden on the user an
+automatic scaling procedure has been implemented in $\mathbb{GPOPS-II}$.
+This automatic scaling procedure is based on the method provided in
+\cite{Betts3} and scales both the NLP variables and NLP constraints
+using the information about the optimal control problem.  First, using
+the user-supplied bounds on the time, state, control, and static
+parameters, the NLP variables are scaled to lie between -0.5 and 0.5.
+As a result, it is essential that the user provide {\em sensible}
+bounds on all quantities (that is, do {\em not} provide unreasonably
+large bounds as this will result in a poorly scaled problem).  Next,
+the NLP constraints are scaled to make the row norms of the Jacobians
+of the functions in the optimal control problem near unity.  The
+automatic scaling procedure is by no means foolproof, but it has been
+found in practice to work well on many problems that otherwise would
+require scaling by hand.  The advice given here is to try the
+automatic scaling procedure, but not to use it for too long if it is
+proving to be unsuccessful.  Finally, the automatic scaling procedure
+in $\mathbb{GPOPS-II}$ can be employed simply by setting the field
+\slred{setup}.\bfblue{scales}.\bfblue{method}='automatic-bounds'.  
+
+\section{Output from an Execution of $\mathbb{GPOPS-II}$\label{sect:output}}
+
+The output of an execution of $\mathbb{GPOPS-II}$ is the structure \slred{output},
+where \slred{output} contains the following fields:
+\begin{itemize}
+  \item \bfblue{result}:  a structure that contains the following fields:
+    \begin{itemize}
+      \item \bfblue{solution}:  the optimal time, state, and control,
+        in each phase and the optimal value of the static parameter
+        vector.  The optimal time, state, and control are stored, 
+        respectively, in the fields \bfblue{solution}.\bfblue{phase($p$)}.\bfblue{time},
+        \bfblue{solution}.\bfblue{phase($p$)}.\bfblue{state}, and
+        \bfblue{solution}.\bfblue{phase($p$)}.\bfblue{control}, while the 
+        static parameter is stored in the field
+        \bfblue{solution}.\bfblue{parameter}; 
+      \item \bfblue{objective}:  the optimal value of the objective function of the optimal control problem;
+      \end{itemize}
+      \item \bfblue{result.setup}:  the setup structure that produced the result found in \bfblue{result} with $\mathbb{GPOPS-II}$;
+      \item \bfblue{meshhistory}:  the solution and error estimate for each mesh on
+        which the NLP was solved (only if mesh refinement is used);
+      \item \bfblue{meshiterations}:  the number of mesh refinement
+        iterations that were taken by $\mathbb{GPOPS-II}$ (only if mesh refinement is used);
+\end{itemize}
+
+\section{Useful Information for Debugging a $\mathbb{GPOPS-II}$ Problem}
+
+One aspect of $\mathbb{GPOPS-II}$ that may appear confusing when debugging
+code pertains to the dimensions of the arrays and the corresponding
+time values.  It is important to remember that $\mathbb{GPOPS-II}$ uses
+collocation at {\em Legendre-Gauss-Radau} points.  Because the
+Legendre-Gauss-Radau points include the initial point but do not
+include the final point, the dynamics, path constraints, and integrand
+cost are computed only at the Legendre-Gauss-Radau points.  While this
+may appear to be a bit strange, the fundamental point here is that
+Legendre-Gauss-Radau quadrature (which is used in $\mathbb{GPOPS-II}$) only
+evaluates the functions at the Legendre-Gauss-Radau points.  Do not
+try to ``fool'' $\mathbb{GPOPS-II}$ by adding the endpoints to the computation of
+the dynamics, path constraints, or integrand cost.  If you do this,
+you will get an error because the dimensions are incorrect.  For a
+more complete mathematical description of the collocation method used
+in $\mathbb{GPOPS-II}$, see the references on the Radau pseudospectral method as
+given in the bibliography at the end of this document. 
+
+\section{$\mathbb{GPOPS-II}$ Examples}
+
+In this Chapter we provide seven examples of using $\mathbb{GPOPS-II}$.
+Each of the examples are problems that have been studied extensively
+in the open literature and the solutions to these problems are well
+known.  The first example is the hyper-sensitive optimal control
+problem from Ref.~\citen{Rao4}.  The second example is a
+multiple-stage launch vehicle ascent problem taken from 
+Refs.~\citen{Benson1}, \citen{Rao:2010:TOMS}, and \citen{Betts3}.  
+The third example is a tumor anti-angiogenesis optimal control problem 
+from Refs.~\citen{Ledzewicz2008a} and \citen{Betts3}.  The fourth
+example is the reusable launch vehicle entry problem taken from
+Ref.~\citen{Betts3}.  The fifth example is the minimum
+time-to-climb of a supersonic aircraft taken from
+Refs.~\citen{Bryson1} and \citen{Betts3}.  The sixth example is the
+optimal control of a hang glider and is taken from
+Ref.~\citen{Zhao2}.  Finally, the seventh example is the optimal
+control of a two-strain tuberculosis model and is taken from
+Ref.~\citen{Jung02}.  For each example the optimal control problem is
+described quantitatively, the $\mathbb{GPOPS-II}$ code is
+provided, and the solution obtained using $\mathbb{GPOPS-II}$
+is provided.   For reference, all examples were solved on a 2.5 GHz
+Core i7 MacBook Pro with 16 GB of RAM running Mac OS-X 10.7.5 (Lion).
+Finally, in the cases where IPOPT was used as the NLP solver, the
+IPOPT MATLAB mex files available on the IPOPT website were used.
+These IPOPT mex files were compiled with the linear solver MUMPS.  
+
+\subsection{Hyper-Sensitive Problem}
+
+Consider the following {\em hyper-sensitive} \cite{Rao3,Rao4,Rao5,Rao6}
+optimal control problem adapted from Ref.~\cite{Rao4}.  Minimize the
+cost functional 
+\begin{equation}\label{hyperSensitiveCost}
+J = \frac{1}{2}\int_{0}^{t_f} (x^2+u^2) dt
+\end{equation}
+subject to the dynamic constraint
+\begin{equation}\label{hyperSensitiveDynamics}
+  \dot{x} = -x^3+u
+\end{equation}
+and the boundary conditions
+\begin{equation}\label{hyperSensitiveBCs}
+  \begin{array}{lclclcl}
+    x(0) & = & 1.5 & , & x(t_f) & = & 1
+  \end{array}
+\end{equation}
+where $t_f$ is fixed.  It is known that for sufficiently large values
+of $t_f$ that the solution to this example exhibits a so called
+``take-off'', ``cruise'', and ``landing'' structure where the
+interesting behavior occurs near the initial and final time (see
+Ref.~\cite{Rao4} for details).  In particular, the ``cruise'' segment
+of this trajectory is constant (that is, the segment where the state
+and control are, interestingly, both zero) becomes an increasingly
+large percentage of the total trajectory time as $t_f$ increases.
+Given the structure of the solution, one would expect that the
+majority of collocation points would be placed in the ``take-off'' and
+``landing'' segments while few collocation points would be placed in
+the ``cruise'' segment.
+
+The hyper-sensitive optimal control problem of
+Eqs.~(\ref{hyperSensitiveCost})--(\ref{hyperSensitiveBCs}) was solved
+using $\mathbb{GPOPS-II}$ witht the NLP solver IPOPT and a mesh
+refinement tolerance $\epsilon=10^{-7}$.  In order to solve this
+problem using $\mathbb{GPOPS-II}$, the continuous function,
+hyperSensitiveContinuous.m, was written to compute both the right-hand
+side of the differential equations and the integrand of the Lagrange
+cost.  The result of integrating the integral specified in
+hyperSensitiveContinuous is then the field 'integral' of the structure
+\slred{input} to the endpoint function hyperSensitiveEndpoint.m.  The
+complete MATLAB code that was written to solve the hyper-sensitive
+optimal control problem of
+Eqs.~(\ref{hyperSensitiveCost})--(\ref{hyperSensitiveBCs}) is given
+below.  
+\begin{shadedframe}
+\lstinputlisting{../examples/hyperSensitive/hyperSensitiveMain.m}
+\lstinputlisting{../examples/hyperSensitive/hyperSensitiveMain.m}
+\lstinputlisting{../examples/hyperSensitive/hyperSensitiveContinuous.m}
+\lstinputlisting{../examples/hyperSensitive/hyperSensitiveEndpoint.m}
+\end{shadedframe}
+The state, $x(t)$, control, $u(t)$, and mesh refinement history that
+arise from the execution of $\mathbb{GPOPS-II}$ with the above code and the NLP
+solver IPOPT is summarized in
+Figs.~\ref{fig:hyperSensitiveState}--\ref{fig:hyperSensitiveMeshRefinement},
+while a table showing the estimate of the relative error as a function
+of the mesh refinement iteration is shown in Table~\ref{tab:hyperSensitiveMeshRefinement}.
+\begin{figure}[h]
+\vspace*{-0.4in}
+\psfragscanon
+\psfrag{time}[][]{\footnotesize$t$}\psfrag{state}[][]{\footnotesize$x(t)$}\psfrag{control}[][]{\footnotesize$u(t)$}
+\psfrag{Mesh Iteration}[][]{\footnotesize Mesh Refinement Iteration}
+\psfrag{Mesh Point Location (Fraction of Interval)}[][]{\footnotesize Mesh Point Locations} 
+\psfrag{0}[][]{\footnotesize 0}  \psfrag{1}[][]{\footnotesize 1}  \psfrag{2}[][]{\footnotesize 2}  \psfrag{3}[][]{\footnotesize 3}  \psfrag{4}[][]{\footnotesize 4}  \psfrag{5}[][]{\footnotesize 5}
+\psfrag{6}[][]{\footnotesize 6}  \psfrag{7}[][]{\footnotesize 7}  \psfrag{8}[][]{\footnotesize 8}  \psfrag{9}[][]{\footnotesize 9}  \psfrag{10}[][]{\footnotesize 10}  \psfrag{11}[][]{\footnotesize 11}
+\psfrag{12}[][]{\footnotesize 12}  \psfrag{13}[][]{\footnotesize 13}
+\psfrag{-0.5}[][]{\footnotesize -0.5} \psfrag{-0.2}[][]{\footnotesize -0.2}
+\psfrag{0.2}[][]{\footnotesize 0.2}  \psfrag{0.4}[][]{\footnotesize 0.4}  \psfrag{0.5}[][]{\footnotesize 0.5}\psfrag{0.6}[][]{\footnotesize 0.6}  \psfrag{0.8}[][]{\footnotesize 0.8}
+\psfrag{1.2}[][]{\footnotesize 1.2}  \psfrag{1.4}[][]{\footnotesize 1.4}  \psfrag{1.5}[][]{\footnotesize 1.5}  \psfrag{1.6}[][]{\footnotesize 1.6}  \psfrag{0.8}[][]{\footnotesize 1.8}
+\psfrag{2.5}[][]{\footnotesize 2.5}  \psfrag{1000}[][]{\footnotesize 1000}\psfrag{2000}[][]{\footnotesize 2000}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{5000}[][]{\footnotesize 5000}
+\centering
+\hspace*{-0.5in}\subfloat[$x(t)$ vs.~$t$.\label{fig:hyperSensitiveState}]{\epsfig{figure=hyperSensitiveState.eps,height=2.7in}}~~~\subfloat[$u(t)$ vs.~$t$. \label{fig:hyperSensitiveControl}]{\epsfig{figure=hyperSensitiveControl.eps,height=2.7in}}
+
+    \subfloat[Mesh Refinement History.\label{fig:hyperSensitiveMeshRefinement}]{\epsfig{figure=hyperSensitiveMeshRefinement.eps,height=2.7in}}
+
+    \caption{Solution to Hyper-Sensitive Problem Obtained Using  $\mathbb{GPOPS-II}$ with the NLP Solver IPOPT and a Mesh  Refinement Tolerance of $10^{-7}$. \label{fig:hyperSensitiveSolution}}
+\end{figure}
+
+\begin{table}[h]
+\centering
+ \caption{Relative Error Estimate vs.~Mesh Refinement Iteration for
+  Hyper-Sensitive Problem. \label{tab:hyperSensitiveMeshRefinement}}
+\small
+\begin{tabular}{|c|c|} \hline
+{\bf Mesh Refinement Iteration} & {\bf Relative Error Estimate} \\\hline\hline
+ 1 & $6.0129\times 10^{-1}$ \\\hline
+ 2 & $1.1855\times 10^{0}$ \\\hline
+ 3 & $2.9973\times 10^{-1}$ \\\hline
+ 4 & $7.6195\times 10^{-2}$ \\\hline
+ 5 & $1.7983\times 10^{-2}$ \\\hline
+ 6 & $4.7709\times 10^{-3}$ \\\hline
+ 7 & $6.0427\times 10^{-4}$ \\\hline
+ 8 & $2.6922\times 10^{-5}$ \\\hline
+ 9 & $7.6867\times 10^{-5}$ \\\hline
+ 10 & $3.2845\times 10^{-7}$ \\\hline
+ 11 & $1.1056\times 10^{-7}$ \\\hline
+ 12 & $4.9712\times 10^{-6}$ \\\hline
+ 13 & $4.0017\times 10^{-8}$ \\\hline
+\end{tabular}
+\end{table}
+
+\clearpage
+
+\subsection{Multiple-Stage Launch Vehicle Ascent Problem}
+
+The problem considered in this section is the ascent of a
+multiple-stage launch vehicle.  The objective is to maneuver the
+launch vehicle from the ground to the target orbit while maximizing
+the remaining fuel in the upper stage.   It is noted that this example
+is is found verbatim in Refs.~\citen{Benson1}, \citen{Rao:2010:TOMS},
+and \citen{Betts3}.  
+
+\subsubsection{Vehicle Properties}
+
+The goal of this launch vehicle ascent problem is to steer the
+vehicle from launch to a geostationary transfer orbit (GTO).  The
+motion of the ehicle is divided into {\em four} distinct phases.
+Phase 1 starts with the vehicle on the ground and terminates
+when the fuel of the first set of solid rocket boosters is depleted.  Upon
+termination of Phase 1 the first set of solid rocket boosters are
+dropped. Phase 2 starts where Phase 1 terminates and terminates when
+the fuel of the second set of solid rockets boosters is depleted.
+Phase 3 starts when Phase 2 terminates and termintes when the fuel of
+the first main engine fuel is depleted.  Finally, Phase 4 starts where
+Phase 3 terminates and terminates when the vehicle reaches the final
+GTO.  The vehicle data for this problem is taken verbatim from
+Ref.~\citen{Rao:2010:TOMS} or \citen{Betts3} and is shown in Table
+\ref{table: launch vehicle properties}. 
+
+\begin{table}[htdp]
+\centering
+\caption{Vehicle Properties for Multiple-Stage Launch Vehicle Ascent Problem. \label{table: launch vehicle properties}}
+\begin{tabular}{|c|c|c|c|}
+\hline
+ & Solid Motors & Stage 1 & Stage 2 \\
+ \hline \hline
+ Total Mass (kg) & 19290 & 104380 & 19300 \\
+ \hline
+ Propellant Mass (kg) & 17010 & 95550 & 16820 \\
+ \hline
+ Engine Thrust (N) & 628500 & 1083100 & 110094 \\
+ \hline
+ Isp (sec) & 284 & 301.7 & 462.4 \\
+ \hline
+ Number of Engines & 9 & 1 & 1 \\
+ \hline
+ Burn Time (sec) & 75.2 & 261 & 700 \\
+ \hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Dynamic Model}
+
+The equations of motion for a non-lifting point mass in flight over a
+spherical rotating planet are expressed in Cartesian Earth centered inertial
+(ECI) coordinates as
+\begin{equation}\label{dyncs}
+\begin{array}{rcl}
+  \dot{\textbf{r}} &=& \mathbf{v} \vspace{3pt}\\
+  \dot{\textbf{v}} &=& -\displaystyle\frac{\mu}{\|\textbf{r}\|^3}\mathbf{r} +
+  \displaystyle\frac{T}{m}\mathbf{u} + \displaystyle\frac{\mathbf{D}}{m}  \vspace{3pt}\\
+  \dot{m} & = & -\displaystyle\frac{T}{g_0I_{sp}}
+\vspace{3pt}\\
+\end{array}
+\end{equation}
+where $\mathbf{r}(t)=\left[\begin{array}{ccc} x(t) & y(t) & z(t)\end{array}\right]^T$
+is the position, $\mathbf{v} = \left[\begin{array}{ccc} v_x(t) & v_y(t) & v_z(t)\end{array}\right]^T$
+is the Cartesian ECI velocity, $\mu$ is the gravitational parameter, $T$ is
+the vacuum thrust, $m$ is the mass, $g_0$ is the acceleration due to gravity at sea level,
+$I_{sp}$ is the specific impulse of the engine,
+$\mathbf{u} = \left[\begin{array}{ccc} u_x & u_y & u_z \end{array}\right]^T$ is the thrust
+direction, and $\mathbf{D}=\left[\begin{array}{ccc} D_x & D_y & D_z \end{array}\right]^T$
+is the drag force.  The drag force is defined as
+\begin{equation}
+  \mathbf{D} = -\frac{1}{2}C_D A_{ref}\rho \|\mathbf{v}_{\textrm{rel}}\|\mathbf{v}_{\textrm{rel}}
+\end{equation}
+where $C_D$ is the drag coefficient, $A_{ref}$ is the reference area, $\rho$
+is the atmospheric density, and $\mathbf{v}_{\textrm{rel}}$ is the Earth relative
+velocity, where $\mathbf{v}_{\textrm{rel}}$ is given as
+\begin{equation}
+\mathbf{v}_{\textrm{rel}} = \mathbf{v}-\boldsymbol{\omega} \times \mathbf{r}
+\end{equation}
+where $\boldsymbol\omega$ is the angular velocity of the Earth relative to
+inertial space.  The atmospheric density is modeled as the exponential
+function
+\begin{equation}
+\rho = \rho_0\mbox{exp}[-h/h_0]
+\end{equation}
+where $\rho_0$ is the atmospheric density at sea level, $h=\|\bfr\|-R_e$ is
+the altitude, $R_e$ is the equatorial radius of the Earth, and $h_0$ is the
+density scale height.  The numerical values for these constants can be found
+in Table \ref{dynamics properties}.
+
+\begin{table}[htdp]
+\caption{Constants used in the launch vehicle example.}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Constant & Value \\
+\hline \hline
+Payload Mass (kg) & 4164 \\
+\hline
+$A_{ref}$ (m${}^2$) & $4\pi$ \\
+\hline
+$C_d$ & 0.5 \\
+\hline
+$\rho_0$ (kg/m${}^3$)& 1.225 \\
+\hline
+$h_0$ (km) & 7.2\\
+\hline
+$t_1$ (s) & 75.2 \\
+\hline
+ $t_2$ (s) & 150.4 \\
+\hline
+ $t_3$ (s) & 261 \\
+\hline
+ $R_e$ (km) & 6378.14 \\
+\hline
+ $V_E$ (km/s) & 7.905\\
+\hline
+\end{tabular}
+\end{center}
+\label{dynamics properties}
+\end{table}
+
+\subsubsection{Constraints}
+
+The launch vehicle starts on the ground at rest (relative to the Earth) at time $t_0$, so that the ECI initial conditions are
+\begin{equation}\label{ICs}
+\begin{array}{rcl}
+\mathbf{r}(t_0) &=& \mathbf{r}_0 = \left[ \begin{array}{ccc} 5605.2 & 0 & 3043.4 \end{array} \right] ^T\quad \mbox{km} \vspace{3pt}\\
+\mathbf{v}(t_0) &=& \mathbf{v}_0 = \left[ \begin{array}{ccc} 0 & 0.4076 & 0 \end{array} \right]^T \quad \mbox{km/s} \vspace{3pt}\\
+m(t_0) &=& m_0 = 301454 \quad \mbox{kg}
+\end{array}
+\end{equation}
+The terminal constraints define the target geosynchronous transfer
+orbit (GTO), which is defined in orbital elements as
+\begin{equation}\label{FCs}
+\begin{array}{rcl}
+ a_f &=   &  24361.14 \; \mbox{km}, \\
+ e_f &=   &  0.7308, \\
+ i_f &=   &  28.5\deg,\\
+ \Omega_f &= & 269.8\deg, \\
+ \omega_f &= & 130.5\deg
+\end{array}
+\end{equation}
+The orbital elements, $a,e,i,\Omega$, and $\omega$ represent the semi-major
+axis, eccentricity, inclination, right ascension of the ascending node
+(RAAN), and argument of perigee, respectively.  Note that the true anomaly,
+$\nu$, is left undefined since the exact location within the orbit is not
+constrained.  These orbital elements can be transformed into ECI coordinates
+via the transformation, $T_{o2c}$, where $T_{o2c}$ is given in \cite{Bate1}.
+
+In addition to the boundary constraints, there exists both a state path
+constraint and a control path constraint in this problem.  A state path
+constraint is imposed to keep the vehicle's altitude above the surface of the
+Earth, so that
+\begin{equation}\label{xpath}
+|\mathbf{r}|\geq R_r
+\end{equation}
+where $R_e$ is the radius of the Earth, as seen in Table \ref{dynamics properties}.  Next, a path constraint is imposed on the control to guarantee
+that the control vector is unit length, so that
+\begin{equation}\label{upath}
+  \|\mathbf{u}\|_2^2 = u_1^2 + u_2^2 + u_3^2 = 1
+\end{equation}
+
+Lastly, each of the four phases in this trajectory is linked to the
+adjoining phases by a set of linkage conditions.  These constraints
+force the position and velocity to be continuous and also account for
+the mass ejections, as 
+\begin{equation}
+\begin{array}{rcl}
+\mathbf{r}^{(p)}(t_f)-\mathbf{r}^{(p+1)}(t_0) &=& \mathbf{0}, \\
+\mathbf{v}^{(p)}(t_f)-\mathbf{v}^{(p+1)}(t_0) &=& \mathbf{0}, \qquad (p=1,\ldots,3)\\
+m^{(p)}(t_f)-m_{dry}^{(p)}-m^{(p+1)}(t_0) &=& 0 \\
+\end{array}
+\end{equation}
+where the superscript $(p)$ represents the phase number.
+
+The optimal control problem is then to find the control, $\mathbf{u}$,
+that minimizes the cost function
+\begin{equation}
+  J=-m^{(4)}(t_f)
+\end{equation}
+subject to the conditions of Eqs.~(\ref{dyncs}), (\ref{ICs}), (\ref{FCs}),
+(\ref{xpath}), and (\ref{upath}).
+
+The MATLAB code that solves the multiple-stage launch vehicle ascent
+problem using $\mathbb{GPOPS-II}$ is shown below.  In particular, this
+problem requires the specification of a function that computes the
+cost functional, the differential-algebraic equations (which, it is
+noted, include both the differential equations {\em and} the path
+constraints), and the event constraints in each phase of the problem
+along with the phase-connect (\ie linkage) constraints.  The problem
+was posed in SI units and the built-in autoscaling procedure was
+used.
+\begin{shadedframe}
+\lstinputlisting{../examples/launch/launchMain.m}
+\lstinputlisting{../examples/launch/launchContinuous.m}
+\lstinputlisting{../examples/launch/launchEndpoint.m}
+\lstinputlisting{../examples/launch/launchEvents.m}
+\lstinputlisting{../examples/launch/launchrv2oe.m}
+\lstinputlisting{../examples/launch/launchoe2rv.m}
+\end{shadedframe}  
+The output of the above code from $\mathbb{GPOPS-II}$ is summarized in
+the following three plots that contain the altitude, speed, and
+controls.
+
+\begin{figure}[h]
+ \psfragscanon
+ \psfrag{time (s)}[][]{\footnotesize$t$ (s)}\psfrag{altitude (km)}[][]{\footnotesize$h(t)$ (km)}\psfrag{control}[][]{\footnotesize$\mathbf{u}(t)$}
+ \psfrag{speed (m/s)}[][]{\footnotesize$v(t)$ (m/s)}
+ \psfrag{Mesh Iteration}[][]{\footnotesize Mesh Refinement Iteration}
+ \psfrag{Mesh Point Location (Fraction of Interval)}[][]{\footnotesize Mesh Point Locations} 
+ \psfrag{-0.8}[][]{\footnotesize -0.8}\psfrag{-0.6}[][]{\footnotesize -0.6}\psfrag{-0.4}[][]{\footnotesize -0.4}\psfrag{-0.2}[][]{\footnotesize -0.2}
+ \psfrag{0.2}[][]{\footnotesize 0.2}\psfrag{0.4}[][]{\footnotesize 0.4}\psfrag{0.6}[][]{\footnotesize 0.6}\psfrag{0.8}[][]{\footnotesize 0.8}
+ \psfrag{50}[][]{\footnotesize 50}\psfrag{100}[][]{\footnotesize 100}\psfrag{150}[][]{\footnotesize 150}
+ \psfrag{0}[][]{\footnotesize 0}\psfrag{1}[][]{\footnotesize 1}\psfrag{200}[][]{\footnotesize 200}\psfrag{250}[][]{\footnotesize 250}\psfrag{400}[][]{\footnotesize 400}  
+ \psfrag{600}[][]{\footnotesize 600}   \psfrag{800}[][]{\footnotesize 800}   \psfrag{1000}[][]{\footnotesize 1000}  
+ \psfrag{2000}[][]{\footnotesize 2000}\psfrag{4000}[][]{\footnotesize 4000}\psfrag{6000}[][]{\footnotesize 6000}
+ \psfrag{8000}[][]{\footnotesize 8000}\psfrag{10000}[][]{\footnotesize 10000}\psfrag{12000}[][]{\footnotesize 12000}
+ \centering
+ \hspace*{-0.5in}\subfloat[$h(t)$ vs.~$t$.\label{fig:launchAltitude}]{\epsfig{figure=launchAltitude.eps,height=2.7in}}~~~\subfloat[$v(t)$ vs.~$t$. \label{fig:launchSpeed}]{\epsfig{figure=launchSpeed.eps,height=2.7in}}
+
+\subfloat[$\mathbf{u}(t)$ vs.~$t$.\label{fig:launchControl}]{\epsfig{figure=launchControl.eps,height=2.7in}}
+
+    \caption{Solution to Launch Vehicle Ascent Problem Using $\mathbb{GPOPS-II}$ with the NLP Solver SNOPT and a Mesh Refinement Tolerance of $10^{-7}$. \label{fig:launchSolution}}
+
+\end{figure}
+
+\clearpage
+
+\subsection{Tumor-Antiangiogenesis Optimal Control Problem}
+
+Consider the following cancer treatment optimal control problem taken
+from Ref.~\citen{Ledzewicz2008a}.  The objective is to minimize
+\begin{equation}\label{tumorCost}
+  p(t_f)
+\end{equation}
+subject to the dynamic constraints
+\begin{equation}\label{tumorDynamics}
+  \begin{array}{lcl}
+    \dot{p}(t) & = & -\xi p(t) \ln\left(\frac{p(t)}{q(t)}\right), \\
+    \dot{q}(t) & = & q(t) \left[ b - \mu - d p^{2/3}(t) - Gu(t) \right],
+ \end{array}
+\end{equation}
+with the initial conditions
+\begin{equation} \label{tumorICs}
+\begin{array}{lcl}
+  p(0) & = & p_0, \\
+  q(0) & = & q_0, \\
+  \end{array}
+\end{equation}
+and the integral constraint
+\begin{equation}\label{tumorIntegral}
+  \int_0^{t_f} u(\tau) d\tau \leq A.
+\end{equation}
+This problem describes a treatment process called anti-angiogenesis
+where it is desired to reverse the direction of growth of a tumor by
+cutting of the blood supply to the tumor.  The code for solving this
+problem is shown below. 
+\begin{shadedframe}
+\lstinputlisting{../examples/tumorAntiAngiogenesis/tumorAntiAngiogenesisMain.m}
+\lstinputlisting{../examples/tumorAntiAngiogenesis/tumorAntiAngiogenesisContinuous.m}
+\lstinputlisting{../examples/tumorAntiAngiogenesis/tumorAntiAngiogenesisEndpoint.m}
+\end{shadedframe} 
+The solution obtained using $\mathbb{GPOPS-II}$ using the NLP solver
+IPOPT with a mesh refinement error tolerance of $10^{-6}$ is shown in
+Figs.~\ref{fig:tumorAntiAngiogenesisState}--\ref{fig:tumorAntiAngiogenesisCostate}.
+Note that in this example we have also provided the costate of the
+optimal control problem, where the costate is estimated using the
+Radau pseudospectral costate estimation method described in
+Refs.~\citen{Garg1,Garg2}, and \citen{Garg3}.
+\begin{figure}[h]
+ \psfragscanon
+ \psfrag{time}[][]{\footnotesize$t$}\psfrag{state}[][]{\footnotesize$(p(t),q(t))$}\psfrag{control}[][]{\footnotesize$u(t)$}\psfrag{costate}[][]{\footnotesize$(\lambda_p(t),\lambda_q(t))$}
+ \psfrag{Mesh Iteration}[][]{\footnotesize Mesh Refinement Iteration}
+ \psfrag{Mesh Point Location (Fraction of Interval)}[][]{\footnotesize Mesh Point Locations (Scaled to Interval $[0,t/t_f]$)} 
+ \psfrag{-0.8}[][]{\footnotesize -0.8}\psfrag{-0.6}[][]{\footnotesize -0.6}\psfrag{-0.4}[][]{\footnotesize -0.4}\psfrag{-0.2}[][]{\footnotesize -0.2}
+ \psfrag{0.1}[][]{\footnotesize 0.1}\psfrag{0.2}[][]{\footnotesize 0.2}\psfrag{0.3}[][]{\footnotesize 0.3}\psfrag{0.4}[][]{\footnotesize 0.4}\psfrag{0.5}[][]{\footnotesize 0.5}
+\psfrag{0.6}[][]{\footnotesize 0.6}\psfrag{0.7}[][]{\footnotesize 0.7}\psfrag{0.8}[][]{\footnotesize 0.8}\psfrag{0.9}[][]{\footnotesize 0.9}\psfrag{1}[][]{\footnotesize 1}
+ \psfrag{2}[][]{\footnotesize 2}\psfrag{3}[][]{\footnotesize 3}\psfrag{4}[][]{\footnotesize 4}\psfrag{5}[][]{\footnotesize 5}\psfrag{6}[][]{\footnotesize 6}
+\psfrag{7}[][]{\footnotesize 7}\psfrag{8}[][]{\footnotesize 8}\psfrag{9}[][]{\footnotesize 9}
+
+\psfrag{1.2}[][]{\footnotesize 1.2}\psfrag{1.4}[][]{\footnotesize 1.4}
+ \psfrag{10}[][]{\footnotesize 10}\psfrag{20}[][]{\footnotesize 20}\psfrag{30}[][]{\footnotesize 30}\psfrag{40}[][]{\footnotesize 40}\psfrag{50}[][]{\footnotesize 50}
+ \psfrag{60}[][]{\footnotesize 60}\psfrag{70}[][]{\footnotesize 70}\psfrag{80}[][]{\footnotesize 80}
+ \psfrag{0}[][]{\footnotesize 0}\psfrag{1}[][]{\footnotesize 1}\psfrag{200}[][]{\footnotesize 200}\psfrag{250}[][]{\footnotesize 250}\psfrag{400}[][]{\footnotesize 400}  
+ \psfrag{600}[][]{\footnotesize 600}   \psfrag{800}[][]{\footnotesize 800}   \psfrag{1000}[][]{\footnotesize 1000}  
+ \psfrag{2000}[][]{\footnotesize 2000}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{4000}[][]{\footnotesize 4000}\psfrag{5000}[][]{\footnotesize 5000}
+ \psfrag{6000}[][]{\footnotesize 6000}\psfrag{7000}[][]{\footnotesize 7000}\psfrag{8000}[][]{\footnotesize 8000}\psfrag{9000}[][]{\footnotesize 9000}
+ \centering
+ \hspace*{-0.5in}\subfloat[$(p(t),q(t))$ vs.~$t$.\label{fig:tumorAntiAngiogenesisState}]{\epsfig{figure=tumorAntiAngiogenesisState.eps,height=2.7in}}~~~\subfloat[$u(t)$ vs.~$t$. \label{fig:tumorAntiAngiogenesisControl}]{\epsfig{figure=tumorAntiAngiogenesisControl.eps,height=2.7in}}
+
+ \hspace*{-0.5in}\subfloat[$(\lambda_p(t),\lambda_q(t),\lambda_y(t))$ vs.~$t$.\label{fig:tumorAntiAngiogenesisCostate}]{\epsfig{figure=tumorAntiAngiogenesisCostate.eps,height=2.7in}}~~~\subfloat[Mesh Refinement History.\label{fig:tumorAntiAngiogenesisMeshRefinement}]{\epsfig{figure=tumorAntiAngiogenesisMeshRefinement.eps,height=2.7in}}
+
+    \caption{Solution to Tumor Anti-Angiogenesis Optimal Control
+      Problem Using $\mathbb{GPOPS-II}$ with the NLP Solver SNOPT and a Mesh Refinement Tolerance of $10^{-6}$. \label{fig:tumorAntiAngiogenesisSolution}}
+
+\end{figure}
+
+\clearpage
+
+\subsection{Reusable Launch Vehicle Entry}
+
+Consider the following optimal control problem of maximizing the
+crossrange during the atmospheric entry of a reusable  launch
+vehicle and taken verbatim from Ref.~\cite{Betts3}.  Minimize the cost
+functional
+\begin{equation}\label{rlv cost}
+  J = -\phi(t_f) 
+\end{equation}
+subject to the dynamic constraints
+\begin{equation}\label{rlv eom}
+  \begin{array}{lclclclcl}
+    \dot{r} & = & v \sin \gamma, \vspace{3pt} \\ 
+    \dot{\theta} & = & \displaystyle \frac{v \cos \gamma \sin \psi}{r \cos
+      \phi},  \vspace{3pt} \\ 
+    \dot{\phi} & = & \displaystyle \frac{v \cos \gamma \cos \psi}{r}, \\ 
+    \dot{v} & = & \displaystyle -\frac{F_d}{m}-F_g\sin \gamma, \vspace{3pt} \\ 
+    \dot{\gamma} & = & \displaystyle \frac{F_l \cos \sigma}{ m v} -\left(\frac{F_g}{v}-\frac{v}{r}\right)\cos\gamma , \vspace{3pt} \\ 
+    \dot{\psi}  & = & \displaystyle \frac{F_l \sin \sigma}{m v \cos \gamma}+\frac{v \cos \gamma \sin \psi \tan \phi }{r},  
+  \end{array}
+\end{equation}
+and the boundary conditions
+\begin{equation} \label{rlv bcs}
+  \begin{array}{lclclcl}
+    r(0) & = & 79248+R_e \textrm{ m} & , & r(t_f) & = & 24384+R_e \textrm{ m}, \\
+    \theta(0) & = & 0 \textrm{ deg} & , & \theta(t_f) & = & \textrm{Free}, \\
+    \phi(0) & = & 0 \textrm{ deg} & , & \phi(t_f) & = & \textrm{Free},  \\
+    v(0) & = & 7803 \textrm{ m/s} & , & v(t_f) & = & 762 \textrm{ m/s}, \\
+    \gamma(0) & = & -1 \textrm{ deg} & , & \gamma(t_f) & = & -5 \textrm{ deg},
+ \\    \psi(0) & = & 90 \textrm{ deg} & , & \psi(t_f) & = & \textrm{Free}. \\
+  \end{array}
+\end{equation}
+Further details of this problem, including the aerodynamic model, can
+be found in Ref.~\citen{Betts3}.  The code for solving this problem is
+shown below.  
+\begin{shadedframe}
+\lstinputlisting{../examples/rlvEntry/rlvEntryMain.m}
+\lstinputlisting{../examples/rlvEntry/rlvEntryContinuous.m}
+\lstinputlisting{../examples/rlvEntry/rlvEntryEndpoint.m}
+\end{shadedframe} 
+This example was solved using $\mathbb{GPOPS-II}$ using the NLP solver
+IPOPT with a mesh refinement tolerance of $10^{-6}$ and the solution
+is shown in
+Figs.~\ref{fig:rlvEntryAltitude}--\ref{fig:rlvEntryBankAngle}.  
+\begin{figure}[h]
+\vspace*{-0.4in}
+\psfragscanon
+\psfrag{Time (s)}[][]{\footnotesize$t$ (s)}\psfrag{Altitude (km)}[][]{\footnotesize$h(t)$ (km)}\psfrag{Speed (km/s)}[][]{\footnotesize$v(t)$ (km/s)}
+\psfrag{Latitude (deg)}[][]{\footnotesize$\phi(t)$ (deg)}\psfrag{Longitude (deg)}[][]{\footnotesize$\theta(t)$ (deg)}\psfrag{Flight Path Angle (deg)}[][]{\footnotesize$\gamma(t)$ (deg)}
+\psfrag{Angle of Attack (deg)}[][]{\footnotesize$\alpha(t)$ (deg)}\psfrag{Bank Angle (deg)}[][]{\footnotesize$\sigma(t)$ (deg)}
+\psfrag{Mesh Iteration}[][]{\footnotesize Mesh Refinement Iteration}
+\psfrag{Mesh Point Location (Fraction of Interval)}[][]{\footnotesize Mesh Point Locations} 
+\psfrag{16.5}[][]{\footnotesize 16.5}\psfrag{17}[][]{\footnotesize 17}\psfrag{17.5}[][]{\footnotesize 17.5}
+\psfrag{-10}[][]{\footnotesize -10}\psfrag{-20}[][]{\footnotesize -20}\psfrag{-30}[][]{\footnotesize -30}\psfrag{-40}[][]{\footnotesize -40}
+\psfrag{-50}[][]{\footnotesize -50}\psfrag{-60}[][]{\footnotesize -60}\psfrag{-70}[][]{\footnotesize -70}\psfrag{-80}[][]{\footnotesize -80}
+\psfrag{0}[][]{\footnotesize 0}\psfrag{1}[][]{\footnotesize 1}\psfrag{2}[][]{\footnotesize 2}\psfrag{3}[][]{\footnotesize 3}\psfrag{4}[][]{\footnotesize 4}
+\psfrag{5}[][]{\footnotesize 5}\psfrag{10}[][]{\footnotesize 10}\psfrag{15}[][]{\footnotesize 15}\psfrag{20}[][]{\footnotesize 20}
+\psfrag{25}[][]{\footnotesize 25}\psfrag{30}[][]{\footnotesize 30}\psfrag{35}[][]{\footnotesize 35}\psfrag{40}[][]{\footnotesize 40}\psfrag{45}[][]{\footnotesize 45}
+\psfrag{50}[][]{\footnotesize 50}\psfrag{55}[][]{\footnotesize 55}\psfrag{60}[][]{\footnotesize 60}\psfrag{65}[][]{\footnotesize 65}
+\psfrag{70}[][]{\footnotesize 70}\psfrag{75}[][]{\footnotesize 75}\psfrag{80}[][]{\footnotesize 80}
+\psfrag{500}[][]{\footnotesize 500}\psfrag{1000}[][]{\footnotesize 1000}\psfrag{1500}[][]{\footnotesize 1500}\psfrag{2000}[][]{\footnotesize 2000}
+\psfrag{2500}[][]{\footnotesize 2500}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{3500}[][]{\footnotesize 3500}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{4500}[][]{\footnotesize 4500}\psfrag{5000}[][]{\footnotesize 5000}\psfrag{5500}[][]{\footnotesize 5500}\psfrag{6000}[][]{\footnotesize 6000}
+\psfrag{6500}[][]{\footnotesize 6500}\psfrag{7000}[][]{\footnotesize 7000}\psfrag{7500}[][]{\footnotesize 7500}\psfrag{8000}[][]{\footnotesize 8000}
+\psfrag{6}[][]{\footnotesize 6}  \psfrag{7}[][]{\footnotesize 7}  \psfrag{8}[][]{\footnotesize 8}  \psfrag{9}[][]{\footnotesize 9}  \psfrag{10}[][]{\footnotesize 10}  \psfrag{11}[][]{\footnotesize 11}
+\psfrag{12}[][]{\footnotesize 12}  \psfrag{13}[][]{\footnotesize 13}
+\psfrag{-0.5}[][]{\footnotesize -0.5} \psfrag{-0.2}[][]{\footnotesize -0.2}
+\psfrag{0.2}[][]{\footnotesize 0.2}  \psfrag{0.4}[][]{\footnotesize 0.4}  \psfrag{0.5}[][]{\footnotesize 0.5}\psfrag{0.6}[][]{\footnotesize 0.6}  \psfrag{0.8}[][]{\footnotesize 0.8}
+\psfrag{1.2}[][]{\footnotesize 1.2}  \psfrag{1.4}[][]{\footnotesize 1.4}  \psfrag{1.5}[][]{\footnotesize 1.5}  \psfrag{1.6}[][]{\footnotesize 1.6}  \psfrag{0.8}[][]{\footnotesize 1.8}
+\psfrag{2.5}[][]{\footnotesize 2.5}  \psfrag{1000}[][]{\footnotesize 1000}\psfrag{2000}[][]{\footnotesize 2000}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{5000}[][]{\footnotesize 5000}
+\centering
+\hspace*{-0.5in}\subfloat[$h(t)$ vs.~$t$.\label{fig:rlvEntryAltitude}]{\epsfig{figure=rlvAltitude.eps,height=2.7in}}~~~\subfloat[$v(t)$ vs.~$t$. \label{fig:rlvEntrySpeeed}]{\epsfig{figure=rlvSpeed.eps,height=2.7in}}
+
+\hspace*{-0.5in}\subfloat[$\phi(t)$ vs.~$\theta(t)$.\label{fig:rlvEntryLonLat}]{\epsfig{figure=rlvLonLat.eps,height=2.7in}}~~~\subfloat[$\gamma(t)$ vs.~$t$. \label{fig:rlvEntryFlightPathAngle}]{\epsfig{figure=rlvFlightPathAngle.eps,height=2.7in}}
+
+\hspace*{-0.5in}\subfloat[$\alpha(t)$ vs.~$t$.\label{fig:rlvEntryAngleofAttack}]{\epsfig{figure=rlvAngleofAttack.eps,height=2.7in}}~~~\subfloat[$\sigma(t)$ vs.~$t$. \label{fig:rlvEntryBankAngle}]{\epsfig{figure=rlvBankAngle.eps,height=2.7in}}
+
+    \caption{Solution to Reusable Launch Vehicle Entry Problem Using  $\mathbb{GPOPS-II}$ with the NLP Solver IPOPT and a Mesh  Refinement Tolerance of $10^{-6}$. \label{fig:rlvEntrySolution}}
+\end{figure}
+
+\clearpage
+
+\subsection{Minimum Time-to-Climb of a Supersonic Aircraft}
+
+The problem considered in this section is the classical minimum
+time-to-climb of a supersonic aircraft.  The objective is to determine
+the minimum-time trajectory and control from take-off to a specified
+altitude and speed.  This problem was originally stated in the open
+literature in the work of Ref.~\citen{Bryson2}, but the model used in
+this study was taken from Ref.~\citen{Betts3} with the exception that
+a linear extrapolation of the thrust data as found in
+Ref.~\citen{Betts3} was performed in order to fill in the ``missing'' 
+data points.
+
+The minimum time-to-climb problem for a supersonic aircraft is posed
+as follows.  Minimize the cost functional
+\begin{equation}
+  J = t_f
+\end{equation}
+subject to the dynamic constraints
+\begin{eqnarray}
+  \dot{h} & = & v\sin\alpha \\
+  \dot{v} & = & \frac{T\cos\alpha-D}{m} \\
+ \dot{\gamma} & = & \frac{T\sin\alpha+L}{mv}+\left(\frac{v}{r}-\frac{\mu}{vr^2}\right)\cos\gamma\\
+ \dot{m} & =&  -\frac{T}{g_0 I_{sp}} 
+\end{eqnarray}
+and the boundary conditions
+\begin{eqnarray}
+  h(0) & = & 0 \textrm{ ft} \\
+  v(0) & = & 129.3144 \textrm{ m/s} \\
+  \gamma(0) & = & 0 \textrm{ rad} \\
+  h(t_f) & = & 19994.88 \textrm{ m} \\
+  v(t_f) & = & 295.092 \textrm{ ft/s} \\
+  \gamma(t_f) & = & 0 \textrm{ rad}
+\end{eqnarray}
+where $h$ is the altitude, $v$ is the speed, $\gamma$ is the
+flight path angle, $m$ is the vehicle mass, $T$ is the magnitude of
+the thrust force, and $D$ is the magnitude of the drag force.  It is
+noted that this example uses table data obtained from
+Ref.~\citen{Bryson2}.  The MATLAB code that solves the minimum
+time-to-climb of a supersonic aircraft is shown below.
+\begin{shadedframe}
+\lstinputlisting{../examples/minimumTimeToClimb/minimumTimeToClimbMain.m}
+\lstinputlisting{../examples/minimumTimeToClimb/minimumTimeToClimbContinuous.m}
+\lstinputlisting{../examples/minimumTimeToClimb/minimumTimeToClimbEndpoint.m}
+\lstinputlisting{../examples/minimumTimeToClimb/minimumTimeToClimbCompute.m}
+\end{shadedframe} 
+The components of the state and the control obtained from running the
+above $\mathbb{GPOPS-II}$ code is summarized in Figs.~\ref{fig:minimumTimeToClimbAltitude}--\ref{fig:minimumTimeToClimbAngleofAttack}.
+
+\begin{figure}[h]
+\psfragscanon
+\psfrag{Time (s)}[][]{\footnotesize$t$ (s)}\psfrag{Altitude (km)}[][]{\footnotesize$h(t)$ (km)}\psfrag{Speed (km/s)}[][]{\footnotesize$v(t)$ (km/s)}
+\psfrag{Flight Path Angle (deg)}[][]{\footnotesize$\gamma(t)$ (deg)}\psfrag{Angle of Attack (deg)}[][]{\footnotesize$\alpha(t)$ (deg)}
+\psfrag{Mesh Iteration}[][]{\footnotesize Mesh Refinement Iteration}
+\psfrag{Mesh Point Location (Fraction of Interval)}[][]{\footnotesize Mesh Point Locations (Scaled to Interval $[0,t/t_f]$)} 
+\psfrag{16.5}[][]{\footnotesize 16.5}\psfrag{17}[][]{\footnotesize 17}\psfrag{17.5}[][]{\footnotesize 17.5}\psfrag{-5}[][]{\footnotesize -5}
+\psfrag{-10}[][]{\footnotesize -10}\psfrag{-20}[][]{\footnotesize -20}\psfrag{-30}[][]{\footnotesize -30}\psfrag{-40}[][]{\footnotesize -40}
+\psfrag{-50}[][]{\footnotesize -50}\psfrag{-60}[][]{\footnotesize -60}\psfrag{-70}[][]{\footnotesize -70}\psfrag{-80}[][]{\footnotesize -80}
+\psfrag{-6}[][]{\footnotesize -6}\psfrag{-4}[][]{\footnotesize -4}\psfrag{-2}[][]{\footnotesize -2}\psfrag{2}[][]{\footnotesize 2}\psfrag{4}[][]{\footnotesize 4}
+\psfrag{0}[][]{\footnotesize 0}\psfrag{5}[][]{\footnotesize 5}\psfrag{10}[][]{\footnotesize 10}\psfrag{15}[][]{\footnotesize 15}\psfrag{20}[][]{\footnotesize 20}
+\psfrag{25}[][]{\footnotesize 25}\psfrag{30}[][]{\footnotesize 30}\psfrag{35}[][]{\footnotesize 35}\psfrag{40}[][]{\footnotesize 40}\psfrag{45}[][]{\footnotesize 45}
+\psfrag{50}[][]{\footnotesize 50}\psfrag{55}[][]{\footnotesize 55}\psfrag{60}[][]{\footnotesize 60}\psfrag{65}[][]{\footnotesize 65}
+\psfrag{70}[][]{\footnotesize 70}\psfrag{75}[][]{\footnotesize 75}\psfrag{80}[][]{\footnotesize 80}\psfrag{85}[][]{\footnotesize 85}\psfrag{90}[][]{\footnotesize 90}
+\psfrag{95}[][]{\footnotesize 95}\psfrag{100}[][]{\footnotesize 100}\psfrag{150}[][]{\footnotesize 150}\psfrag{200}[][]{\footnotesize 200}
+\psfrag{250}[][]{\footnotesize 250}\psfrag{300}[][]{\footnotesize 300}\psfrag{350}[][]{\footnotesize 350}\psfrag{400}[][]{\footnotesize 400}
+\psfrag{450}[][]{\footnotesize 450}\psfrag{500}[][]{\footnotesize 500}
+\psfrag{500}[][]{\footnotesize 500}\psfrag{1000}[][]{\footnotesize 1000}\psfrag{1500}[][]{\footnotesize 1500}\psfrag{2000}[][]{\footnotesize 2000}
+\psfrag{2500}[][]{\footnotesize 2500}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{3500}[][]{\footnotesize 3500}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{4500}[][]{\footnotesize 4500}\psfrag{5000}[][]{\footnotesize 5000}\psfrag{5500}[][]{\footnotesize 5500}\psfrag{6000}[][]{\footnotesize 6000}
+\psfrag{6500}[][]{\footnotesize 6500}\psfrag{7000}[][]{\footnotesize 7000}\psfrag{7500}[][]{\footnotesize 7500}\psfrag{8000}[][]{\footnotesize 8000}
+\psfrag{6}[][]{\footnotesize 6}  \psfrag{7}[][]{\footnotesize 7}  \psfrag{8}[][]{\footnotesize 8}  \psfrag{9}[][]{\footnotesize 9}  \psfrag{10}[][]{\footnotesize 10}  \psfrag{11}[][]{\footnotesize 11}
+\psfrag{12}[][]{\footnotesize 12}  \psfrag{13}[][]{\footnotesize 13}
+\psfrag{-0.5}[][]{\footnotesize -0.5} \psfrag{-0.2}[][]{\footnotesize -0.2}\psfrag{0.1}[][]{\footnotesize 0.1}
+\psfrag{0.2}[][]{\footnotesize 0.2}\psfrag{0.3}[][]{\footnotesize 0.3}  \psfrag{0.4}[][]{\footnotesize 0.4}  \psfrag{0.5}[][]{\footnotesize 0.5}\psfrag{0.6}[][]{\footnotesize 0.6}  \psfrag{0.8}[][]{\footnotesize 0.8}
+\psfrag{1.2}[][]{\footnotesize 1.2}  \psfrag{1.4}[][]{\footnotesize 1.4}  \psfrag{1.5}[][]{\footnotesize 1.5}  \psfrag{1.6}[][]{\footnotesize 1.6}  \psfrag{0.8}[][]{\footnotesize 1.8}
+\psfrag{2.5}[][]{\footnotesize 2.5}  \psfrag{1000}[][]{\footnotesize 1000}\psfrag{2000}[][]{\footnotesize 2000}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{5000}[][]{\footnotesize 5000}
+\centering
+\hspace*{-0.8in}\subfloat[$h(t)$ vs.~$t$.\label{fig:minimumTimeToClimbAltitude}]{\epsfig{figure=minimumTimeToClimbAltitude.eps,height=2.7in}}~~~\subfloat[$h(t)$ vs.~$v(t)$. \label{fig:minimumTimeToClimbAltitudevsSpeed}]{\epsfig{figure=minimumTimeToClimbAltitudevsSpeed.eps,height=2.7in}}
+
+\hspace*{-0.8in}\subfloat[$\gamma(t)$ vs.~$t$.\label{fig:minimumTimeToClimbFlightPathAngle}]{\epsfig{figure=minimumTimeToClimbFlightPathAngle.eps,height=2.7in}}~~~\subfloat[$\alpha$ vs.~$t$. \label{fig:minimumTimeToClimbAngleofAttack}]{\epsfig{figure=minimumTimeToClimbAngleofAttack.eps,height=2.7in}}
+
+   \subfloat[Mesh Refinement History.\label{fig:minimumTimeToClimbMeshRefinement}]{\epsfig{figure=minimumTimeToClimbMeshRefinement.eps,height=2.7in}}
+
+   \caption{Solution to Minimum Time-to-Climb Problem Using $\mathbb{GPOPS-II}$ with the NLP Solver SNOPT and a Mesh  Refinement Tolerance of $10^{-6}$. \label{fig:minimumTimeToClimbSolution}}
+\end{figure}
+
+\begin{table}[h]
+\centering
+ \caption{Relative Error Estimate vs.~Mesh Refinement Iteration for Minimum Time-to-Climb Problem. \label{tab:minimumTimeToClimbMeshRefinement}}
+\small
+\begin{tabular}{|c|c|} \hline
+{\bf Mesh Refinement Iteration} & {\bf Relative Error Estimate} \\\hline\hline
+ 1 & $5.776\times 10^{-3}$ \\\hline
+ 2 & $2.3717\times 10^{-3}$ \\\hline
+ 3 & $3.0679\times 10^{-5}$ \\\hline
+ 4 & $6.2216\times 10^{-6}$ \\\hline
+ 5 & $8.861\times 10^{-6}$ \\\hline
+ 6 & $2.3224\times 10^{-6}$ \\\hline
+ 7 & $1.3708\times 10^{-6}$ \\\hline
+ 8 & $3.8553\times 10^{-6}$ \\\hline
+ 9 & $5.1621\times 10^{-6}$ \\\hline
+ 10 & $7.0515\times 10^{-6}$ \\\hline
+ 11 & $2.5598\times 10^{-6}$ \\\hline
+ 12 & $1.0775\times 10^{-6}$ \\\hline
+ 13 & $7.8122\times 10^{-7}$ \\\hline
+\end{tabular}
+\end{table}
+
+\clearpage
+
+\subsection*{Dynamic Soaring Problem}
+
+The following optimal control problem considers optimizing the motion
+of a hang glider in the presence of known wind force.  The probem was
+originally described in Ref.~\cite{Zhao2} and the problem considered
+here is identical to that of Ref.~\cite{Zhao2}.  The objective is to
+minimize the average wind gradient slope $\beta$, that is, minimize
+\begin{equation}
+  J = \beta
+\end{equation}
+subject to the hang glider dynamics
+\begin{equation}
+  \begin{array}{lclclcl}
+     \dot{x}& =& v \cos \gamma \sin \psi + W_x &,&
+     m\dot{v}& =& -D-mg \sin\gamma -m\dot{W}_x \cos \gamma \sin \psi \\
+     \dot{y}& =& v \cos \gamma \cos \psi &,&
+     mv\dot{\gamma}& =& L \cos \sigma -mg \cos \gamma + m\dot{W}_x \sin\gamma \sin \psi, \\
+     \dot{h}& =& v \sin \gamma &,&
+     mv\cos\gamma\dot{\psi}& =& L \sin \sigma -m \dot{W}_x \cos \psi \\
+  \end{array}
+\end{equation}
+and the boundary conditions
+\begin{equation}\label{orbit_bcs}
+ \begin{array}{lcl}
+   (x(0),y(0),h(0))& =& (x(t_f),y(t_f),h(t_f)) = (0,0,0), \\
+   (v(t_f)-v(0),\gamma(t_f)-\gamma(0),\psi(t_f)+2\pi-\psi(0)) &= &(0,0,0),
+ \end{array}
+\end{equation} 
+where $W_x$ is the wind  component along the East direction, $m$ is
+the glider mass, $v$ is the air-relative speed, $\psi$ is the azimuth
+angle  (measured clockwise from the North), $\gamma$ is the
+air-relative flight path angle, $h$ is the altitude, $(x,y)$ are (East, North)
+position,  $\sigma$ is the glider bank angle, $D$ is the drag force,
+and $L$ is the lift force.  The drag and lift forces are computed
+using a standard drag polar aerodynamic model
+\begin{equation}
+ \begin{array}{lcl}
+   D = & q S C_D, \\
+   L = & q S C_L,
+ \end{array}
+\end{equation} 
+where $q=\rho v^2/2$ is the dynamic pressure, $S$ is the vehicle
+reference area, $C_D=C_{D0}+KC_L^2$ is the coefficient of drag, and 
+$C_L$ is the coefficient of lift (where $0 \leq C_L \leq C_{L,\max}$).
+The constants for this problem ar taken verbatim from
+Ref.~\citen{Zhao2} and are given as $C_{D0}=0.00873$, $K=0.045$, and
+$C_{L,\max}=1.5$. Finally, it is noted that $C_L$ and $\sigma$ are the
+controls.
+
+This example was posed in English units, but was solved using the 
+automatic scaling procedure in $\mathbb{GPOPS-II}$ with the NLP solver
+IPOPT using second sparse finite-difference approximations for the NLP
+derivatives and with a mesh refinement tolerance of $10^{-7}$.  The
+code used to solve this problem is shown below and the solution to
+this problem is shown in Fig.~\ref{fig:dynamicSoaringSolution}. 
+\begin{shadedframe}
+\lstinputlisting{../examples/dynamicSoaring/dynamicSoaringMain.m}
+\lstinputlisting{../examples/dynamicSoaring/dynamicSoaringContinuous.m}
+\lstinputlisting{../examples/dynamicSoaring/dynamicSoaringEndpoint.m}
+\end{shadedframe} 
+
+\begin{figure}[h]
+\psfragscanon
+\psfrag{Time (s)}[][]{\footnotesize$t$ (s)}\psfrag{Altitude (ft)}[][]{\footnotesize$h(t)$ (ft)}\psfrag{X (ft)}[][]{\footnotesize$x(t)$ (ft)}\psfrag{Y (ft)}[][]{\footnotesize$y(t)$ (ft)}
+\psfrag{Speed (ft/s)}[][]{\footnotesize$v(t)$ (ft/s)}\psfrag{CL (dimensionless)}[][]{\footnotesize$C_L(t)$ (dimensionless)}\psfrag{Bank Angle (deg)}[][]{\footnotesize$\sigma(t)$ (deg)}
+\psfrag{Flight Path Angle (deg)}[][]{\footnotesize$\gamma(t)$ (deg)}\psfrag{Azimuth (deg)}[][]{\footnotesize$\psi(t)$ (deg)}
+\psfrag{Angle of Attack (deg)}[][]{\footnotesize$\alpha(t)$ (deg)}\psfrag{Mesh Iteration}[][]{\footnotesize Mesh Refinement Iteration}
+\psfrag{Mesh Point Location (Fraction of Interval)}[][]{\footnotesize Mesh Point Locations (Scaled to Interval $[0,t/t_f]$)} 
+\psfrag{-500}[][]{\footnotesize -500}\psfrag{-1000}[][]{\footnotesize -1000}
+\psfrag{-50}[][]{\footnotesize -50}\psfrag{-100}[][]{\footnotesize -100}\psfrag{-150}[][]{\footnotesize -150}\psfrag{-200}[][]{\footnotesize -200}
+\psfrag{-250}[][]{\footnotesize -250}\psfrag{-300}[][]{\footnotesize -300}\psfrag{-350}[][]{\footnotesize -350}\psfrag{-400}[][]{\footnotesize -400}
+\psfrag{16.5}[][]{\footnotesize 16.5}\psfrag{17}[][]{\footnotesize 17}\psfrag{17.5}[][]{\footnotesize 17.5}\psfrag{-5}[][]{\footnotesize -5}
+\psfrag{-10}[][]{\footnotesize -10}\psfrag{-20}[][]{\footnotesize -20}\psfrag{-30}[][]{\footnotesize -30}\psfrag{-40}[][]{\footnotesize -40}
+\psfrag{-50}[][]{\footnotesize -50}\psfrag{-60}[][]{\footnotesize -60}\psfrag{-70}[][]{\footnotesize -70}\psfrag{-80}[][]{\footnotesize -80}
+\psfrag{-6}[][]{\footnotesize -6}\psfrag{-4}[][]{\footnotesize -4}\psfrag{-2}[][]{\footnotesize -2}\psfrag{2}[][]{\footnotesize 2}\psfrag{4}[][]{\footnotesize 4}
+\psfrag{0}[][]{\footnotesize 0}\psfrag{5}[][]{\footnotesize 5}\psfrag{10}[][]{\footnotesize 10}\psfrag{15}[][]{\footnotesize 15}\psfrag{20}[][]{\footnotesize 20}
+\psfrag{25}[][]{\footnotesize 25}\psfrag{30}[][]{\footnotesize 30}\psfrag{35}[][]{\footnotesize 35}\psfrag{40}[][]{\footnotesize 40}\psfrag{45}[][]{\footnotesize 45}
+\psfrag{50}[][]{\footnotesize 50}\psfrag{55}[][]{\footnotesize 55}\psfrag{60}[][]{\footnotesize 60}\psfrag{65}[][]{\footnotesize 65}
+\psfrag{70}[][]{\footnotesize 70}\psfrag{75}[][]{\footnotesize 75}\psfrag{80}[][]{\footnotesize 80}\psfrag{85}[][]{\footnotesize 85}\psfrag{90}[][]{\footnotesize 90}
+\psfrag{95}[][]{\footnotesize 95}\psfrag{100}[][]{\footnotesize 100}\psfrag{150}[][]{\footnotesize 150}\psfrag{200}[][]{\footnotesize 200}
+\psfrag{120}[][]{\footnotesize 120}\psfrag{160}[][]{\footnotesize 160}\psfrag{200}[][]{\footnotesize 200}\psfrag{240}[][]{\footnotesize 240}
+\psfrag{250}[][]{\footnotesize 250}\psfrag{300}[][]{\footnotesize 300}\psfrag{350}[][]{\footnotesize 350}\psfrag{400}[][]{\footnotesize 400}
+\psfrag{600}[][]{\footnotesize 600}\psfrag{800}[][]{\footnotesize 800}
+\psfrag{500}[][]{\footnotesize 500}\psfrag{1000}[][]{\footnotesize 1000}\psfrag{1500}[][]{\footnotesize 1500}\psfrag{2000}[][]{\footnotesize 2000}
+\psfrag{2500}[][]{\footnotesize 2500}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{3500}[][]{\footnotesize 3500}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{4500}[][]{\footnotesize 4500}\psfrag{5000}[][]{\footnotesize 5000}\psfrag{5500}[][]{\footnotesize 5500}\psfrag{6000}[][]{\footnotesize 6000}
+\psfrag{6500}[][]{\footnotesize 6500}\psfrag{7000}[][]{\footnotesize 7000}\psfrag{7500}[][]{\footnotesize 7500}\psfrag{8000}[][]{\footnotesize 8000}
+\psfrag{6}[][]{\footnotesize 6}  \psfrag{7}[][]{\footnotesize 7}  \psfrag{8}[][]{\footnotesize 8}  \psfrag{9}[][]{\footnotesize 9}  \psfrag{10}[][]{\footnotesize 10}  \psfrag{11}[][]{\footnotesize 11}
+\psfrag{12}[][]{\footnotesize 12}  \psfrag{13}[][]{\footnotesize 13}
+\psfrag{-1.5}[][]{\footnotesize -1.5} \psfrag{-1}[][]{\footnotesize -1}
+\psfrag{-0.5}[][]{\footnotesize -0.5} \psfrag{-0.2}[][]{\footnotesize -0.2}\psfrag{0.1}[][]{\footnotesize 0.1}
+\psfrag{0.2}[][]{\footnotesize 0.2}\psfrag{0.3}[][]{\footnotesize 0.3}  \psfrag{0.4}[][]{\footnotesize 0.4}  \psfrag{0.5}[][]{\footnotesize 0.5}\psfrag{0.6}[][]{\footnotesize 0.6}  \psfrag{0.8}[][]{\footnotesize 0.8}
+\psfrag{1.2}[][]{\footnotesize 1.2}  \psfrag{1.4}[][]{\footnotesize 1.4}  \psfrag{1.5}[][]{\footnotesize 1.5}  \psfrag{1.6}[][]{\footnotesize 1.6}  \psfrag{0.8}[][]{\footnotesize 1.8}
+\psfrag{2.5}[][]{\footnotesize 2.5}  \psfrag{1000}[][]{\footnotesize 1000}\psfrag{2000}[][]{\footnotesize 2000}\psfrag{3000}[][]{\footnotesize 3000}\psfrag{4000}[][]{\footnotesize 4000}
+\psfrag{5000}[][]{\footnotesize 5000}
+\centering
+\hspace*{-0.5in}\subfloat[$h(t)$ vs.~$x(t)$ and $y(t)$.\label{fig:dynamicSoaringXYZ}]{\epsfig{figure=dynamicSoaringxyh.eps,height=2.4in}}~~~\subfloat[$v(t)$ vs.~$t$. \label{fig:dynamicSoaringSpeed}]{\epsfig{figure=dynamicSoaringSpeed.eps,height=2.7in}}
+
+\hspace*{-0.5in}\subfloat[$\gamma(t)$ vs.~$t$.\label{fig:dynamicSoaringFlightPathAngle}]{\epsfig{figure=dynamicSoaringFlightPathAngle.eps,height=2.7in}}~~~\subfloat[$\psi$ vs.~$t$. \label{fig:dynamicSoaringAzimuth}]{\epsfig{figure=dynamicSoaringAzimuth.eps,height=2.7in}}
+
+\hspace*{-0.5in}\subfloat[$C_L(t)$ vs.~$t$.\label{fig:dynamicSoaringCL}]{\epsfig{figure=dynamicSoaringCL.eps,height=2.7in}}~~~\subfloat[$\sigma(t)$ vs.~$t$.\label{fig:dynamicSoaringBankAngle}]{\epsfig{figure=dynamicSoaringBankAngle.eps,height=2.7in}}
+
+   \caption{Solution to Dynamic Soaring Problem Using $\mathbb{GPOPS-II}$ with the NLP Solver IPOPT and a Mesh  Refinement Tolerance of $10^{-6}$. \label{fig:dynamicSoaringSolution}}
+\end{figure}
+
+\clearpage
+
+\subsection{Two-Strain Tuberculosis Optimal Control Problem}
+
+Quoting from Ref.~\citen{Jung02}, ``[Past]
+models [for Tuberculosis (TB)] did not account for time dependent control
+strategies$\ldots$In this article we consider (time dependent) optimal
+control strategies associated with case holding and case finding based
+on a two-strain TB model$\ldots$Our objective functional balances the
+effect of minimizing the cases of latent and infectious drug-resistant
+TB and minimizing the cost of implementing the control treatments.''
+The two-strain tuberculosis optimal control problem considered in 
+Ref.~\citen{Jung02} is formulated as follows.  Minimize the objective
+functional
+\begin{equation}\label{TB-cost}
+  J = \int_0^{t_f} \left[\scriptsize  L_2 + I_2 + \frac{1}{2}  B_1 u_1^2 + B_2  u_2^2\right]dt 
+\end{equation}
+subject to the dynamic constraints
+\begin{equation}\label{TB-dynamics}
+ \begin{array}{lcl}
+    \dot{S}(t) & = & \Lambda - \beta_1 S\frac{I_1 (t)}{N} - \beta^*  S\frac{I_2 (t)}{N} - \mu S (t), \\
+    \dot{L}_1 (t) & = &  \beta_1 S (t)\frac{I_1 (t)}{N} - (\mu + k_1)L_1 (t) - u_1  r_1L_1 (t) \\
+    & + & (1-u_2 (t))p r_2 I_1 (t) +\beta_2 T (t) \frac{I_1 (t)}{N} - \beta^* L_1 (t) \frac{I_2 (t)}{N}, \\
+    \dot{I}_1 (t) & = & k_1 L_1 (t) - (\mu + d_1) I_1 (t) - r_2 I_1 (t), \\
+    \dot{L}_2 (t) & = &  (1-u_2 (t)) q r_2 I_1 (t) - (\mu + k_2) L_2 (t) \\
+    & + & \beta^*  (S (t)+L_1 (t) + T (t))\frac{I_2 (t)}{N}, \\
+    \dot{I}_2 (t) & = &  k_2 L_2 (t) - (\mu+d_2)I_2 (t), \\
+    \dot{T}(t) & = &  u_1 (t) r_1 L_1 (t) - (1-(1-u_2 (t)))(p+q)r_2 I_1 (t) \\
+    & - & \beta_2 T (t) \frac{I_1 (t)}{N} - \beta^* T (t) \frac{I_2 (t)}{N} - \mu T (t),\\
+    0 & = & S + L_1 + I_1 + L_2 + I_2 + T - N,
+  \end{array}
+\end{equation}
+and the initial conditions
+\begin{equation}\label{TB-ICs}
+  (S(0),L_1(0),I_1(0),L_2(0),I_2(0),T(0))=(S_0,L_{10},I_{10},L_{20},I_{20},T_0), 
+\end{equation}
+where etails of the model can be found in Ref.~\citen{Jung02} (and are
+also provided in the $\mathbb{GPOPS-II}$ code shown below).  The optimal 
+control problem of Eqs.~(\ref{TB-cost})--(\ref{TB-ICs}) is solved
+using $\mathbb{GPOPS-II}$ with the NLP solver SNOPT with a mesh
+refinement accuracy tolerance of $10^{-6}$.   The code used to solve
+this example is given below and the solution is shown in
+Figs.~\ref{fig:tuberculosisState} and \ref{fig:tuberculosisControl}.
+\begin{shadedframe}
+\lstinputlisting{../examples/TuberculosisModel/tuberculosisMain.m}
+\lstinputlisting{../examples/TuberculosisModel/tuberculosisContinuous.m}
+\lstinputlisting{../examples/TuberculosisModel/tuberculosisEndpoint.m}
+\end{shadedframe}
+\begin{figure}[h]
+\psfragscanon
+\psfrag{Time (s)}[][]{$t$ (s)}\psfrag{S x 1000}[][]{$S(t)\times 1000$}\psfrag{L1 x 1000}[][]{$L_1(t)\times 1000$}\psfrag{L2 x 1000}[][]{$L_2(t)\times 1000$}\psfrag{I1 x 1000}[][]{$I_1(t)\times 1000$}
+\psfrag{I2 x 1000}[][]{$I_2(t)\times 1000$}\psfrag{T}[][]{$T(t)$}
+\psfrag{1}[][]{\footnotesize 1}\psfrag{3}[][]{\footnotesize 3}\psfrag{5}[][]{\footnotesize 5}\psfrag{7}[][]{\footnotesize 7}\psfrag{9}[][]{\footnotesize 9}
+\psfrag{2}[][]{\footnotesize 2}\psfrag{4}[][]{\footnotesize 4}\psfrag{6}[][]{\footnotesize 6}\psfrag{8}[][]{\footnotesize 8}\psfrag{10}[][]{\footnotesize 10}
+\psfrag{12}[][]{\footnotesize 12}\psfrag{14}[][]{\footnotesize 14}\psfrag{16}[][]{\footnotesize 16}\psfrag{18}[][]{\footnotesize 18}\psfrag{20}[][]{\footnotesize 20}
+\psfrag{100}[][]{\footnotesize 100}\psfrag{200}[][]{\footnotesize 200}\psfrag{300}[][]{\footnotesize 300}\psfrag{400}[][]{\footnotesize 400}\psfrag{500}[][]{\footnotesize 500}
+\psfrag{600}[][]{\footnotesize 600}\psfrag{700}[][]{\footnotesize 700}\psfrag{800}[][]{\footnotesize 800}\psfrag{900}[][]{\footnotesize 900}\psfrag{1000}[][]{\footnotesize 1000}
+\psfrag{150}[][]{\footnotesize 150}\psfrag{250}[][]{\footnotesize 250}\psfrag{350}[][]{\footnotesize 350}\psfrag{450}[][]{\footnotesize 450}\psfrag{550}[][]{\footnotesize 550}
+\centering
+\hspace*{-0.5in}\subfloat[$S(t)$ vs.~$t$.\label{fig:tuberculosisS}]{\epsfig{figure=tuberculosisS.eps,height=2.7in}}~~~\subfloat[$L_1(t)$ vs.~$t$. \label{fig:tuberculosisL1}]{\epsfig{figure=tuberculosisL1.eps,height=2.7in}}
+
+\hspace*{-0.5in}\subfloat[$L_2(t)$ vs.~$t$.\label{fig:tuberculosisL2}]{\epsfig{figure=tuberculosisL2.eps,height=2.7in}}~~~\subfloat[$I_1$ vs.~$t$. \label{fig:tuberculosisI1}]{\epsfig{figure=tuberculosisI1.eps,height=2.7in}}
+
+\hspace*{-0.5in}\subfloat[$I_2(t)$ vs.~$t$.\label{fig:tuberculosisI2}]{\epsfig{figure=tuberculosisI2.eps,height=2.7in}}~~~\subfloat[$T(t)$ vs.~$t$.\label{fig:tuberculosisT}]{\epsfig{figure=tuberculosisT.eps,height=2.7in}}
+
+   \caption{Optimal State for Tuberculosis Optimal Control Problem Using $\mathbb{GPOPS-II}$ with the NLP Solver SNOPT and a Mesh  Refinement Tolerance of $10^{-6}$. \label{fig:tuberculosisState}}
+\end{figure}
+
+\begin{figure}[h]
+\psfragscanon
+\psfrag{Time (s)}[][]{$t$ (s)}\psfrag{U1}[][]{$u_1(t)$}\psfrag{U2}[][]{$u_2(t)$}
+\psfrag{0.1}[][]{\footnotesize 0.1}\psfrag{0.3}[][]{\footnotesize 0.3}\psfrag{0.5}[][]{\footnotesize 0.5}\psfrag{0.7}[][]{\footnotesize 0.7}\psfrag{0.9}[][]{\footnotesize 0.9}
+\psfrag{0.2}[][]{\footnotesize 0.2}\psfrag{0.4}[][]{\footnotesize 0.4}\psfrag{0.6}[][]{\footnotesize 0.6}\psfrag{0.8}[][]{\footnotesize 0.8}\psfrag{1}[][]{\footnotesize 1}
+\psfrag{-0.1}[][]{\footnotesize -0.1}\psfrag{-0.3}[][]{\footnotesize -0.3}\psfrag{-0.5}[][]{\footnotesize -0.5}\psfrag{-0.7}[][]{\footnotesize -0.7}\psfrag{-0.9}[][]{\footnotesize -0.9}
+\psfrag{-0.2}[][]{\footnotesize -0.2}\psfrag{-0.4}[][]{\footnotesize -0.4}\psfrag{-0.6}[][]{\footnotesize -0.6}\psfrag{-0.8}[][]{\footnotesize -0.8}\psfrag{-1}[][]{\footnotesize -1}
+\psfrag{1}[][]{\footnotesize 1}\psfrag{3}[][]{\footnotesize 3}\psfrag{5}[][]{\footnotesize 5}\psfrag{7}[][]{\footnotesize 7}\psfrag{9}[][]{\footnotesize 9}
+\psfrag{2}[][]{\footnotesize 2}\psfrag{4}[][]{\footnotesize 4}\psfrag{6}[][]{\footnotesize 6}\psfrag{8}[][]{\footnotesize 8}\psfrag{10}[][]{\footnotesize 10}
+\centering
+
+\hspace*{-0.5in}\subfloat[$u_1(t)$ vs.~$t$.\label{fig:tuberculosisU1}]{\epsfig{figure=tuberculosisU1.eps,height=2.7in}}~~~\subfloat[$u_2(t)$ vs.~$t$.\label{fig:tuberculosisU2}]{\epsfig{figure=tuberculosisU2.eps,height=2.7in}}
+
+   \caption{Optimal Control for Tuberculosis Optimal Control Problem Using $\mathbb{GPOPS-II}$ with the NLP Solver SNOPT and a Mesh  Refinement Tolerance of $10^{-6}$. \label{fig:tuberculosisControl}}
+\end{figure}
+
+\clearpage
+
+\section{Concluding Remarks}
+
+While the authors have put for the effort to make $\mathbb{GPOPS-II}$ a
+user-friendly software, it is important to understand several aspects
+of computational optimal control in order to make $\mathbb{GPOPS-II}$ easier to
+use.  First, it is {\em highly} recommended that the user scale a
+problem manually using insight from the physics/mathematics of the
+problem because the automatic scaling procedure is by no means
+foolproof.  Second, the particular parameterization of a problem can
+make all the difference with regard to obtaining a solution in a
+reliable manner.  Finally, even if the NLP solver returns the result that the
+optimality conditions have been satisfied, it is important to verify
+the solution.  In short, a great deal of time in solving optimal
+control problems is spent in formulation and analysis.
+
+\bibliographystyle{aiaa}
+\bibliography{master}
+
+\end{document}

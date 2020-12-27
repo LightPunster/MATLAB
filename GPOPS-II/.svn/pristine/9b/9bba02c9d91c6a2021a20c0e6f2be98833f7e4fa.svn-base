@@ -1,0 +1,253 @@
+function varargout = gpopsMultipliersRPMD(lam, probinfo, varargin)%zl, zu, xmul
+
+% gpopsMultipliersRPMD
+% this function organizes the multipliers of the nonlinear program to
+% correspond to the continuous functions and the event constraints from the
+% optimal control problem
+
+% get OCP info
+numphase      = probinfo.numphase;
+numstate      = probinfo.numstate;
+numcontrol    = probinfo.numcontrol;
+numpath       = probinfo.numpath;
+numintegral   = probinfo.numintegral;
+numeventgroup = probinfo.numeventgroup;
+numparameter  = probinfo.numparameter;
+
+% get number of nodes
+numnodes = probinfo.numnodes;
+
+% get variable inputs
+if nargin == 4
+    zl = varargin{1};
+    zu = varargin{2};
+elseif nargin == 5
+    xmul = varargin{1};
+    Fstate = varargin{2};
+    xstate = varargin{3};
+end
+
+% preallocate contmult
+contmult(numphase).defectmult = [];
+if sum(numpath,2) ~= 0;
+  contmult(numphase).pathmult = [];
+end
+if sum(numintegral,2) ~= 0;
+  contmult(numphase).integralmult = [];
+end
+if nargin == 4 || nargin == 5
+  contmult(numphase).durationmult = [];
+end
+
+if nargin == 5
+    contbasis(numphase).defectbasis = [];
+    if sum(numpath,2) ~= 0;
+      contbasis(numphase).pathbasis = [];
+    end
+    if sum(numintegral,2) ~= 0;
+      contbasis(numphase).integralbasis = [];
+    end
+end
+
+% preallocate boundmult
+if nargin == 4 || nargin == 5
+  boundmult.phase(numphase).statemult = [];
+  if sum(numcontrol,2) ~= 0
+    boundmult.phase(numphase).controlmult = [];
+  end
+  boundmult.phase(numphase).t0tfmult = [];
+  if sum(numintegral,2) ~= 0
+    boundmult.phase(numphase).Qmult = [];
+  end
+  if numparameter ~= 0
+    boundmult.parametermult = [];
+  end
+end
+
+if nargin == 5
+  boundbasis.phase(numphase).statebasis = [];
+  if sum(numcontrol,2) ~= 0
+    boundbasis.phase(numphase).controlbasis = [];
+  end
+  boundbasis.phase(numphase).t0tfbasis = [];
+  if sum(numintegral,2) ~= 0
+    boundbasis.phase(numphase).Qbasis = [];
+  end
+  if numparameter ~= 0
+    boundbasis.parameterbasis = [];
+  end
+end
+
+% get multipliers for phases
+for phasecount = 1:numphase;
+  % get OCP info for each phase
+  numstatep = numstate(phasecount);
+  numcontrolp = numcontrol(phasecount);
+  numpathp = numpath(phasecount);
+  numintegralp = numintegral(phasecount);
+  numnodesp = numnodes(phasecount);
+  
+  % get nlp map for phase
+  phasenlpmap = probinfo.nlpcontmap(phasecount);
+  
+  % get multiplers for defect constraints
+  defectmult = lam(phasenlpmap.defectmap(1,1):phasenlpmap.defectmap(2,numstatep));
+  contmult(phasecount).defectmult = reshape(defectmult,numnodesp,numstatep);
+  
+  % get multipliers for path constraints
+  if numpathp ~= 0;
+    pathmult = lam(phasenlpmap.pathmap(1,1):phasenlpmap.pathmap(2,numpathp));
+    contmult(phasecount).pathmult = reshape(pathmult,numnodesp,numpathp);
+  end
+  
+  % get multipliers for integral constraints
+  if numintegralp ~= 0;
+    contmult(phasecount).integralmult = lam(phasenlpmap.integrandmap)';
+  end
+  
+  % get multipliers for duration constraints
+  if nargin == 4 || nargin == 5
+    contmult(phasecount).durationmult = lam(phasenlpmap.durationmap);
+  end
+  
+  % get multipliers for bounds on variables
+  if nargin == 4
+    % get multiplers for state bounds
+    statemult.l = zl(phasenlpmap.statemap(1,1):phasenlpmap.statemap(2,numstatep));
+    boundmult.phase(phasecount).statemult.l = reshape(statemult.l,numnodesp+1,numstatep);
+    statemult.u = zu(phasenlpmap.statemap(1,1):phasenlpmap.statemap(2,numstatep));
+    boundmult.phase(phasecount).statemult.u = reshape(statemult.u,numnodesp+1,numstatep);
+    
+    % get multipliers for control bounds
+    if numcontrolp ~= 0;
+      controlmult.l = zl(phasenlpmap.controlmap(1,1):phasenlpmap.controlmap(2,numcontrolp));
+      boundmult.phase(phasecount).controlmult.l = reshape(controlmult.l,numnodesp,numcontrolp);
+      controlmult.u = zu(phasenlpmap.controlmap(1,1):phasenlpmap.controlmap(2,numcontrolp));
+      boundmult.phase(phasecount).controlmult.u = reshape(controlmult.u,numnodesp,numcontrolp);
+    end
+    
+    % get multipliers for t0, tf bounds
+    boundmult.phase(phasecount).t0tfmult.l = zl(phasenlpmap.timemap);
+    boundmult.phase(phasecount).t0tfmult.u = zu(phasenlpmap.timemap);
+    
+    % get multipliers for Q bounds
+    if numintegralp ~= 0;
+      boundmult.phase(phasecount).Qmult.l = zl(phasenlpmap.timemap(end)+1:phasenlpmap.timemap(end)+numintegralp);
+      boundmult.phase(phasecount).Qmult.u = zu(phasenlpmap.timemap(end)+1:phasenlpmap.timemap(end)+numintegralp);
+    end
+  end
+  if nargin == 5
+    % get multiplers for state bounds
+    statemult = xmul(phasenlpmap.statemap(1,1):phasenlpmap.statemap(2,numstatep));
+    boundmult.phase(phasecount).statemult = reshape(statemult,numnodesp+1,numstatep);
+    
+    % get multipliers for control bounds
+    if numcontrolp ~= 0;
+      controlmult = xmul(phasenlpmap.controlmap(1,1):phasenlpmap.controlmap(2,numcontrolp));
+      boundmult.phase(phasecount).controlmult = reshape(controlmult,numnodesp,numcontrolp);
+    end
+    
+    % get multipliers for t0, tf bounds
+    boundmult.phase(phasecount).t0tfmult = xmul(phasenlpmap.timemap);
+    
+    % get multipliers for Q bounds
+    if numintegralp ~= 0;
+      boundmult.phase(phasecount).Qmult = xmul(phasenlpmap.timemap(end)+1:phasenlpmap.timemap(end)+numintegralp);
+    end
+    %%%%%% BASIS
+    % get basis for state bounds
+    statebasis = xstate(phasenlpmap.statemap(1,1):phasenlpmap.statemap(2,numstatep));
+    boundbasis.phase(phasecount).statebasis = reshape(statebasis,numnodesp+1,numstatep);
+    
+    % get basis for control bounds
+    if numcontrolp ~= 0;
+      controlbasis = xstate(phasenlpmap.controlmap(1,1):phasenlpmap.controlmap(2,numcontrolp));
+      boundbasis.phase(phasecount).controlbasis = reshape(controlbasis,numnodesp,numcontrolp);
+    end
+    
+    % get basis for t0, tf bounds
+    boundbasis.phase(phasecount).t0tfbasis = xstate(phasenlpmap.timemap);
+    
+    % get basis for Q bounds
+    if numintegralp ~= 0;
+      boundbasis.phase(phasecount).Qbasis = xstate(phasenlpmap.timemap(end)+1:phasenlpmap.timemap(end)+numintegralp);
+    end
+    
+    % get multiplers for defect constraints
+    defectbasis = Fstate(phasenlpmap.defectmap(1,1):phasenlpmap.defectmap(2,numstatep));
+    contbasis(phasecount).defectbasis = reshape(defectbasis,numnodesp,numstatep);
+
+    % get multipliers for path constraints
+    if numpathp ~= 0;
+      pathbasis = Fstate(phasenlpmap.pathmap(1,1):phasenlpmap.pathmap(2,numpathp));
+      contbasis(phasecount).pathbasis = reshape(pathbasis,numnodesp,numpathp);
+    end
+
+    % get multipliers for integral constraints
+    if numintegralp ~= 0;
+      contbasis(phasecount).integralbasis = Fstate(phasenlpmap.integrandmap)';
+    end
+
+    % get multipliers for duration constraints
+    contbasis(phasecount).durationbasis = Fstate(phasenlpmap.durationmap);
+    
+  end 
+end
+
+% get multipliers for parameter bounds
+if nargin == 4
+  if numparameter ~= 0;
+    parametermap = probinfo.nlpparametermap;
+    boundmult.parametermult.l = zl(parametermap(1):parametermap(numparameter));
+    boundmult.parametermult.u = zu(parametermap(1):parametermap(numparameter));
+  end
+end
+if nargin == 5
+  if numparameter ~= 0;
+    parametermap = probinfo.nlpparametermap;
+    boundmult.parametermult = xmul(parametermap(1):parametermap(numparameter));
+    boundbasis.parameterbasis = xstate(parametermap(1):parametermap(numparameter));
+  end
+end
+
+% put contmult in ocpmult structure
+ocpmult.contmult = contmult;
+if nargin == 5
+   ocpbasis.contbasis = contbasis; 
+end
+
+% put boundmult in ocpmult structure
+if nargin == 4 || nargin == 5
+  ocpmult.boundmult = boundmult;
+end
+if nargin == 5
+   ocpbasis.boundbasis = boundbasis; 
+end
+
+% get multipliers for events
+if numeventgroup ~= 0;
+  eventmultgroup(numeventgroup).eventmult = [];
+  nlpeventmap = probinfo.nlpeventmap;
+  for eventgroupcount = 1:numeventgroup;
+    eventref = nlpeventmap(1,eventgroupcount):nlpeventmap(2,eventgroupcount);
+    eventmultgroup(eventgroupcount).eventmult = lam(eventref)';
+  end
+  % put eventmultgroup in ocpmult structure
+  ocpmult.eventmultgroup = eventmultgroup;
+  if nargin == 5
+     eventbasisgroup(numeventgroup).eventbasis = [];
+      nlpeventmap = probinfo.nlpeventmap;
+      for eventgroupcount = 1:numeventgroup;
+        eventref = nlpeventmap(1,eventgroupcount):nlpeventmap(2,eventgroupcount);
+        eventbasisgroup(eventgroupcount).eventbasis = Fstate(eventref)';
+      end 
+      ocpbasis.eventbasisgroup = eventbasisgroup;
+  end
+end
+
+varargout{1} = ocpmult;
+if nargin == 5
+varargout{2} = ocpbasis;
+end
+
+end

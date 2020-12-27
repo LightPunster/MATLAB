@@ -1,0 +1,102 @@
+By downloading, using, modifying, or distributing $\mathbb{GPOPS}2$,
+you agree to the terms of this license agreement.  This license gives
+you extremely GENEROUS RIGHTS, so if you do not agree to the terms of
+this agreement, you may not proceed further with using, using,
+modifying, or distributing $\mathbb{GPOPS}2$.  
+
+\subsection*{License for $\mathbb{GPOPS}2$ Software}
+
+PLEASE READ THE FOLLOWING TERMS AND CONDITIONS CAREFULLY BEFORE
+PROCEEDING TO DOWNLOAD GPOPS-II.  
+
+This page constitutes the official license for the General-Purpose
+Pseudospectral Optimal Control Software (hereafter referred to as
+“GPOPS-II”).  By downloading, using, modifying, or distributing
+GPOPS-II you are agreeing to all of the the terms and conditions
+described henceforth.  Do not proceed with the download of GPOPS-II if
+you do not agree with any of the terms and conditions in this
+agreement.   
+
+If you are either a student or employee at an academic institution
+(that is, K-12 or degree-granting higher-learning institution), an
+employee at a not-for-profit, or an employee of the U.S. Federal
+Government or U.S. State Government, GPOPS-II is available
+free-of-charge provided you are using it for non-commercial research
+and development.  This free-of-charge non-commercial use license comes
+with the following rules:
+\begin{itemize}
+\item You may use the software for any non-commercial purpose
+\item You may make derivative works of the software (called a “Derived
+  Work”), and you may copy and distribute any such Derived Work
+  provided that the Derived Work is also for non-commercial purposes
+\item If you distribute GPOPS-II or any Derived Work, you are required
+  to provide any changes made to the source code to the authors of
+  GPOPS-II so that we may include these changes in a future release if
+  we find the changes useful
+\item You must leave all existing copyright notices, warranty
+  disclaimers, and license terms in place in any changes that you make
+\item You may not add any restrictions beyond that of this license
+  agreement in any Derived Work
+\item You must conspicuously announce that the changes you have made
+  are available under the original license for GPOPS-II
+\item You must provide assurance that you will not make a profit of
+  any kind from the distribution or re-distribution of GPOPS-II
+\end{itemize}
+
+If you are an employee at a profit-making institution, the download and use of GPOPS-II requires a licensing fee, and this fee structure applies regardless of the kind of work being performed at your profit-making institution.  The commercial licensing fee structure is as follows:  
+\begin{itemize}
+\item Individual License:  $1000.00 for first-time purchase of any version of GPOPS-II; $200.00 for the purchase of any upgrade to a future major release.
+\item Site-Wide Commercial License (Use at a Single Location):
+  $5000.00 for first time purchase of any version of GPOPS-II;
+  $1000.00 for the purchase of any upgrade to a future major release.
+\item Company-Wide Commercial License:  $10000.00 for first time
+  purchase of any version of GPOPS-II; $2000.00 for the purchase of
+  any upgrade to a future major release. 
+\end{itemize}
+
+DISCLAIMER:  GPOPS-II is provided “as-is” with no warranties, none of any kind.  Furthermore, the authors may not be held liable for any use of GPOPS-II, and you may not recover any damages for any reason whatsoever.
+
+\subsection*{Distribution of $\mathbb{GPOPS}2$}
+
+$\mathbb{GPOPS}2$ is a completely free software both for use and for
+redistribution.  Furthermore, while it may be used within commercial
+organizations, it is not for sale or resale.  The only exception to
+the sales restriction above is that $\mathbb{GPOPS}2$ may be included as a part of
+a free open-source software (for example, a distribution of the Linux
+operating system).  When distributing $\mathbb{GPOPS}2$ with a free
+operating system, no fee beyond the price of the operating system
+itself may be added (that is, you cannot profit from the
+redistribution of $\mathbb{GPOPS}2$). $\mathbb{GPOPS}2$ is not for commercial use with
+the exception that it may be used by commercial organizations for
+internal research and development.  Any use of $\mathbb{GPOPS}2$ by commercial
+organizations that involve the presentation of results for
+profit-making purposes is strictly prohibited.  In addition, there are
+some things that you must shoulder:
+\begin{itemize}
+\item You get {\em no warranties} of any kind;
+\item If the software damages you in any way, you may only recover
+direct damages up to the amount you paid for it (that is, you get zero
+if you did not pay anything for the software);
+\item You may not recover any other damages, including those called
+"consequential damages." (The state or country where you live may not
+allow you to limit your liability in this way, so this may not apply
+to you).
+\end{itemize}
+The $\mathbb{GPOPS}2$ License continues perpetually, except that your license
+rights end automatically if
+\begin{itemize}
+\item You do not abide by the "give back to the community" terms (your
+licensees get to keep their rights if they abide);
+\item Anyone prevents you from distributing the software under the
+terms of this license agreement.
+\item You sell the software in any manner with the one exception
+listed above.
+\end{itemize}
+
+{\em $\mathbb{GPOPS}2$ is provided ``as is'' without warranty
+of any kind, expressed or implies, including but not limited to the 
+warranties of merchantability, fitness for a particular purpose, and
+non-infringement.  In no event shall the authors or copyright holders
+be liable for any claim, damages, or other liability, whether in an
+action of contract, tort, or otherwise, arising from, out of, or in
+connection with the software or the use or dealings in the software}.

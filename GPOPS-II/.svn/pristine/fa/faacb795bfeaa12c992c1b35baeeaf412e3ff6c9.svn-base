@@ -1,0 +1,57 @@
+function result = gpopsSolveRPMI(setup, probinfo, scalemethod)
+
+% gpopsSolveRPMI
+% this function solves the optimal control problem using the Radau
+% Pseudospectral Method using the mesh, derivative method, derivative
+% level, scaling method, and nonlinear program defined in the user setup
+
+% get full collocation points, weights and diff matrix for each phase
+if probinfo.displaylevel > 0;
+  disp('Computing Radau Points, Integration Weights, and Integration Matrix');
+end
+[probinfo.numnodes, probinfo.collocation] = gpopsPointsWeightsRPMI(setup.mesh.phase);
+
+% get NLP bounds and map
+if probinfo.displaylevel > 0;
+  disp('Creating Bounds For Nonlinear Program');
+end
+[ZL, ZU, FL, FU, probinfo] = gpopsBoundsRPMI(setup, probinfo);
+
+% get NLP Guess
+if probinfo.displaylevel > 0;
+  disp('Creating Guess For Nonlinear Program');
+end
+ZG = gpopsGuessRPMI(setup, probinfo);
+
+% get NLP scales
+if probinfo.displaylevel > 0;
+  disp('Computing Scales For Nonlinear Program');
+end
+[probinfo, ocpscales] = gpopsScaleRPMI(setup, probinfo, scalemethod);
+
+% call NLP
+if probinfo.displaylevel > 0;
+  disp(['Calling Nonlinear Program ', setup.nlp.solver]);
+end
+if strcmpi(setup.nlp.solver,'snopt');
+  result = gpopsSnoptHandlerRPMI(ZG, ZL, ZU, FL, FU, setup.name, setup.nlp.snoptoptions, probinfo);
+elseif strcmpi(setup.nlp.solver,'ipopt');
+  result = gpopsIpoptHandlerRPMI(ZG, ZL, ZU, FL, FU, setup.name, setup.nlp.ipoptoptions, probinfo);
+end
+
+% add scales and collocation to result structure
+if probinfo.scaleflag
+  result.ocpscales = ocpscales;
+end
+
+% store mesh properties
+numphase = probinfo.numphase;
+collocation(numphase).s = [];
+collocation(numphase).w = [];
+collocation(numphase).E = [];
+for phasecount = 1:probinfo.numphase;
+  collocation(phasecount).s = probinfo.collocation(phasecount).s;
+  collocation(phasecount).w = probinfo.collocation(phasecount).w;
+  collocation(phasecount).E = probinfo.collocation(phasecount).E;
+end
+result.collocation = collocation;

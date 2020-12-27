@@ -1,0 +1,616 @@
+function [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpLR(result, setup, probinfo, meshhistory, meshcount)
+
+% gpopsMeshAnalysis_hpPR                            LiuRao analysis
+% this function interpolates the result on to a new mesh of N+1 Radau
+% points in each section
+% the state is interpolated using the Nth degree lagrange polynomial in
+% each section
+% the control is interpolated using a cubic in each segment
+% the error is defined as the difference between the interpolated state and
+% the integrated right hand side evaluated at the interpolated state,
+% control and time
+
+% meshaccepted is assumed true unless integration
+% difference on N+1 mesh does not meet tolerance
+meshaccepted = true;
+
+% get number of phases
+numphases = size(result.solution.phase,2);
+
+% add 1 to the number of collocation points
+currentmesh = setup.mesh.phase;
+meshinterp = currentmesh;
+for phasecount = 1:numphases;
+    meshinterp(phasecount).colpoints = meshinterp(phasecount).colpoints + 1;
+end
+
+% get collocation points, integration matrix and intial value matrix for
+% meshinterp
+[numnodes, collocationInt] = gpopsPointsWeightsRPMI(meshinterp);
+
+% preallocate interpsolution
+interpphase(numphases).time = [];
+interpphase(numphases).state = [];
+interpphase(numphases).control = [];
+
+% initiate max error
+maxerror = 0;
+
+% interp solution, control
+for phasecount = 1:numphases;
+    % get solution for each phase
+    phasesol = result.solution.phase(phasecount);
+    
+    % get result mesh and interp for each phase
+    interpcolpoints = meshinterp(phasecount).colpoints;
+    resultcolpoints = currentmesh(phasecount).colpoints;
+    sinterp = collocationInt(phasecount).s;
+    ssol = [result.collocation(phasecount).s; [1 1]];
+    
+    % time on interp mesh for phase
+    t0 = phasesol.time(1);
+    tf = phasesol.time(end);
+    interpphase(phasecount).time = (sinterp(:,1) + 1).*(tf - t0)./2 + t0;
+    
+    % get number of segments
+    numseg = size(interpcolpoints,2);
+    
+    % preallocate state and control for each phase
+    numstate = size(phasesol.state,2);
+    stateinterp = zeros(numnodes(phasecount), numstate);
+    if isfield(phasesol, 'control');
+        if ~isempty(phasesol.control);
+            numcontrol = size(phasesol.control,2);
+            controlinterp = zeros(numnodes(phasecount), numcontrol);
+            phasecontrolswitch = true;
+        else
+            controlinterp = [];
+            phasecontrolswitch = false;
+        end
+    else
+        controlinterp = [];
+        phasecontrolswitch = false;
+    end
+    
+    % initalize segment markers
+    solstart = 1;
+    intstart = 1;
+    for segcount = 1:numseg;
+        % update end marker
+        solend = solstart + resultcolpoints(segcount);
+        intend = intstart + interpcolpoints(segcount)-1;
+        
+        % get solution and interpolation index
+        solindex = (solstart:solend)';
+        intindex = (intstart:intend)';
+        
+        % get segment LGR points
+        ssolseg = ssol(solindex,2);
+        ssolseg(end) = 1;
+        sinterpseg = sinterp(intindex,2);
+        
+        % interp state using lagrange polynomial
+        segstate = phasesol.state(solindex,:);
+        stateinterp(intindex,:) = gpopsLagrangeInterp(ssolseg, segstate, sinterpseg);
+        
+        % interp control
+        if phasecontrolswitch;
+            segcontrol = phasesol.control(solindex,:);
+            
+            %interp using lagrange polynomial
+            controlinterp(intindex,:) = gpopsLagrangeInterp(ssolseg(1:end-1,:), segcontrol(1:end-1,:), sinterpseg);
+        end
+        
+        % update start marker
+        solstart = solend;
+        intstart = intend+1;
+    end
+    % Get full state (state at radau points including end point at 1
+    statefull = [stateinterp; phasesol.state(end,:)];
+    
+    % save interp state and control for each phase
+    interpphase(phasecount).state = stateinterp;
+    interpphase(phasecount).statefull = statefull;
+    interpphase(phasecount).control = controlinterp;
+end
+
+interpsolution.phase = interpphase;
+if isfield(result.solution, 'parameter');
+    interpsolution.parameter = result.solution.parameter;
+end
+
+% evaluate continuous function on interpsolution
+contoutput = gpopsEvalContInternal(interpsolution, setup);
+
+% find integration error
+% preallocate interror
+phaseerror(numphases).absdifference = [];
+for phasecount = 1:numphases;
+  % get interpolated state
+  statefullp = interpsolution.phase(phasecount).statefull;
+  
+  % get initial and final time
+  N = numnodes(phasecount);
+  t0 = result.solution.phase(phasecount).time(1);
+  tf = result.solution.phase(phasecount).time(end);
+  
+  % get integration and intital value matrices
+  Ep = collocationInt(phasecount).Emat;
+  Fp = sparse(collocationInt(phasecount).F(:,1), collocationInt(phasecount).F(:,2), collocationInt(phasecount).F(:,3), N, N+1);
+  
+  % scale dynamics by segement fractionages
+  contoutput(phasecount).dynamics = full(collocationInt(phasecount).fractionMat*contoutput(phasecount).dynamics);
+  
+  % find inegrated state
+  intstate = [statefullp(1,:); Fp*statefullp + (tf-t0)/2.*(Ep*contoutput(phasecount).dynamics)];
+  
+  % find difference
+  statescalemat = diag(1./(max(abs(statefullp))+1));
+  phaseerror(phasecount).absdifference = abs(statefullp - intstate)*statescalemat;
+  phaseerror(phasecount).statescalemat = statescalemat;
+  phaseerror(phasecount).numstate = size(result.solution.phase(phasecount).state,2);
+
+  % find difference of path constraint 
+%    if isfield(setup.bounds.phase(phasecount),'path');
+%      if isfield(setup.bounds.phase(phasecount).path,'lower');
+%        if ~isempty(setup.bounds.phase(phasecount).path.lower);
+%          eqpathind = setup.bounds.phase(phasecount).path.lower == setup.bounds.phase(phasecount).path.upper;
+%          phaseerror(phasecount).dyndiff = phaseerror(phasecount).absdifference;
+%          % equality path constraints
+%          if any(eqpathind)
+%            tempdiff = contoutput(phasecount).path(:,eqpathind) - ones(N,1)*setup.bounds.phase(phasecount).path.upper(eqpathind);
+%            eqpathscalemat = diag(1./(abs(setup.bounds.phase(phasecount).path.upper(eqpathind))+1));
+%            phaseerror(phasecount).eqpathdiff = [abs(tempdiff)*eqpathscalemat; zeros(1, sum(eqpathind))];
+%            phaseerror(phasecount).absdifference = [phaseerror(phasecount).absdifference, phaseerror(phasecount).eqpathdiff];
+%          end
+%          % inequality path constraints
+%          if any(~eqpathind)
+%            % upper bound
+%            violateind = contoutput(phasecount).path(:,~eqpathind) > ones(N,1)*setup.bounds.phase(phasecount).path.upper(~eqpathind);
+%            tempdiff = contoutput(phasecount).path(:,~eqpathind) - ones(N,1)*setup.bounds.phase(phasecount).path.upper(~eqpathind);
+%            uppathscalemat = diag(1./(abs(setup.bounds.phase(phasecount).path.upper(~eqpathind))+1));
+%            phaseerror(phasecount).upperpathdiff = [abs(tempdiff.*violateind)*uppathscalemat; zeros(1, sum(~eqpathind))];
+%            phaseerror(phasecount).absdifference = [phaseerror(phasecount).absdifference, phaseerror(phasecount).upperpathdiff];
+%            % lower bound
+%            violateind = contoutput(phasecount).path(:,~eqpathind) < ones(N,1)*setup.bounds.phase(phasecount).path.lower(~eqpathind);
+%            tempdiff = contoutput(phasecount).path(:,~eqpathind) - ones(N,1)*setup.bounds.phase(phasecount).path.lower(~eqpathind);
+%            lowpathscalemat = diag(1./(abs(setup.bounds.phase(phasecount).path.lower(~eqpathind))+1));
+%            phaseerror(phasecount).lowerpathdiff = [abs(tempdiff.*violateind)*lowpathscalemat; zeros(1, sum(~eqpathind))];
+%            phaseerror(phasecount).absdifference = [phaseerror(phasecount).absdifference, phaseerror(phasecount).lowerpathdiff];
+%          end
+%        end
+%      end
+%    end
+end
+
+% preallocate newmesh = mesh
+newmesh = currentmesh;
+
+% print line break
+if probinfo.displaylevel > 0;
+    disp(' ');
+    disp(' ');
+end
+
+% find if mesh meets tolerance
+% check if tolerance is meet in each phase
+for phasecount = 1:numphases;
+    % display mesh information in phase
+    if probinfo.displaylevel > 0;
+        disp(['Analysis of Mesh in Phase ',num2str(phasecount)]);
+    end
+
+    % get the state scales
+    statescalemat = phaseerror(phasecount).statescalemat;
+    
+    % get max error
+    phasemaxerror = max(max(phaseerror(phasecount).absdifference));
+    % save max error
+    if phasemaxerror > maxerror;
+        maxerror = phasemaxerror;
+    end
+    
+    % check if tolerance is meet in phase
+    if phasemaxerror <= setup.mesh.tolerance;
+        % tolerance is meet in phase
+        newcolpoints = currentmesh(phasecount).colpoints;
+        newfraction = currentmesh(phasecount).fraction;
+        % save newmesh for each phase
+        newmesh(phasecount).sub = [];
+        newmesh(phasecount).segerror = [];
+        if probinfo.displaylevel > 0;
+            disp(['Maximum Relative Error on Current Mesh in Phase ',num2str(phasecount),' = ',num2str(phasemaxerror)]);
+            disp(['Mesh Error Tolerance IS satisfied in Phase ',num2str(phasecount)]);
+        end
+    else
+        % tolerance not meet in phase
+        % the mesh will need to be refined and problem resolved
+        if probinfo.displaylevel > 0;
+            disp(['Maximum Relative Error on Current Mesh in Phase ',num2str(phasecount),' = ',num2str(phasemaxerror)]);
+            disp(['Mesh Error Tolerance is NOT satisfied in Phase ',num2str(phasecount)]);
+        end
+        meshaccepted = false;
+        % get result and interpolation mesh and collocation points for each phase
+        interpcolpoints = meshinterp(phasecount).colpoints;
+        resultcolpoints = currentmesh(phasecount).colpoints;
+        resultfraction = currentmesh(phasecount).fraction;
+        numseg = size(interpcolpoints,2);
+        [sadlist, allerror] = gpopsMeshSadlist(phaseerror(phasecount).absdifference, numseg, interpcolpoints, setup.mesh);
+        % solution information
+        resulttime = result.solution.phase(phasecount).time;
+        resultstate = result.solution.phase(phasecount).state;
+        numpoints = length(resulttime);
+        resultstatesc = resultstate * statescalemat - ones(numpoints,1)*(min(resultstate).*(1./(max(resultstate) - min(resultstate))));
+        resulttimesc = 2*(resulttime - resulttime(1))/(resulttime(end) - resulttime(1))-1;
+        segstart = 1;
+        for segcount = 1:numseg
+            segend = segstart + resultcolpoints(segcount);
+            segindex = (segstart:segend)';
+            segtime = resulttimesc(segindex);
+            segstate = resultstatesc(segindex,:);
+            timeintp = linspace(segtime(1), segtime(end), 100)';
+            stateintp = gpopsLagrangeInterp(segtime, segstate, timeintp);
+            derv.seg{segcount} = gpopsMeshDerivative(timeintp, stateintp);
+            segstart = segend;
+        end
+        newmesh(phasecount).derv = derv;
+        numstate = phaseerror(phasecount).numstate;
+        % numstate = size(resultstate,2);
+        % if not the first mesh, get the informaion of previous mesh
+        if meshcount ~= 1
+            oldcolpoints = meshhistory(end-1).result.setup.mesh.phase(phasecount).colpoints;
+            oldsub = meshhistory(end).result.setup.mesh.phase(phasecount).sub;
+            oldfraction = meshhistory(end-1).result.setup.mesh.phase(phasecount).fraction;
+            olderror = meshhistory(end).result.setup.mesh.phase(phasecount).segerror;
+            oldderv = meshhistory(end).result.setup.mesh.phase(phasecount).derv;
+            oldsegcount = gpopsPreviousSeg(oldsub);
+        end
+        % initialize newcolpoints and newfraction
+        newcolpoints = [];
+        newfraction = [];
+        newsub = [];
+        segstart = 1;
+        for segcount = 1:numseg
+            segend = segstart + resultcolpoints(segcount);
+            segindex = (segstart:segend)';
+            segtime = resulttime(segindex);
+            segstate = resultstate(segindex,:);
+            tau = result.collocation(phasecount).s(segstart: segstart+resultcolpoints(segcount)-1,2);
+            if sadlist(segcount) % sadlist
+                if meshcount == 1 || (meshcount >1 && isempty(oldsub)) % first mesh interation
+                    segsub = 1;
+                    fractiontemp = resultfraction(segcount)/segsub*ones(1, segsub);
+                    logdiff = 3;
+                    colpointstemp = (resultcolpoints(segcount) + logdiff)*ones(1,segsub);
+                    if probinfo.displaylevel > 0;
+                        disp(['    Increasing Number of Collocation Points in Mesh Interval ',num2str(segcount),' to ',num2str(colpointstemp)]);
+                    end
+                else % from 2nd mesh, use derivative to determine nonsmoothness
+                    oldseg = oldsegcount(segcount);
+                    segmaxerror = allerror(segcount);
+                    fractiontemp = resultfraction(segcount);
+                    q = gpopsMeshSmoothness(oldseg, olderror, oldcolpoints, oldfraction, segmaxerror, resultcolpoints(segcount), fractiontemp);                    
+                    dervratio = 0;
+                    if oldseg > 0
+                        dervratio = gpopsDetectEdge(oldderv, derv, numstate, segcount, oldseg);
+                    end
+                    segsub = 1;
+                    fractiontemp = resultfraction(segcount);
+                    logdiff = ceil(((allerror(segcount)/setup.mesh.tolerance)^(1/(q - 2.5)) - 1)*resultcolpoints(segcount));
+                    logdiff = max(logdiff, 1);
+                    colpointstemp = resultcolpoints(segcount) + logdiff;
+                    if ~any(dervratio > setup.mesh.R)  && colpointstemp <= setup.mesh.colpointsmax
+                        if probinfo.displaylevel > 0;
+                            disp(['    Increasing Number of Collocation Points in Mesh Interval ',num2str(segcount),' to ',num2str(colpointstemp)]);
+                        end
+                    else
+                        segsub = ceil((allerror(segcount)/setup.mesh.tolerance)^(1/q));
+                        capmax = log(segmaxerror/setup.mesh.tolerance)/log(resultcolpoints(segcount));
+                        segsub = min(ceil(capmax), segsub);
+                        segsub = max(2, segsub);
+                        colpointstemp = (resultcolpoints(segcount))*ones(1, segsub);
+                        fractiontemp = (resultfraction(segcount)/segsub)*ones(1, segsub);
+                        if probinfo.displaylevel > 0;
+                            disp(['    Dividing Mesh Interval ',num2str(segcount),' Into ',num2str(segsub),' Mesh Intervals']);
+                        end
+                    end
+                end
+            else
+                % happy list: try to remove points
+                removecount = gpopsMeshRemove(segtime, segstate, setup.mesh, numstate, statescalemat, tau);
+                if removecount > 0
+                    if probinfo.displaylevel > 0
+                        disp(['    Removing Number of Collocation Points in Mesh Interval ',num2str(segcount),' to ',num2str(resultcolpoints(segcount)-removecount)]);
+                    end
+                end
+                colpointstemp = resultcolpoints(segcount)-removecount;
+                fractiontemp = resultfraction(segcount);
+                segsub = 1;
+            end
+            newcolpoints = [newcolpoints, colpointstemp];
+            newfraction = [newfraction, fractiontemp];
+            newsub = [newsub,segsub];
+            segstart = segend;
+        end
+        
+        %  COMBINE Intervals
+        segstart = 1;
+        mergelist = [];
+        ref = 0;
+        for segcount = 2:numseg
+            segend = segstart + resultcolpoints(segcount-1);
+            segindex = (segstart:segend)';
+            segtime1 = resulttime(segindex);
+            segstate1 = resultstate(segindex,:);
+            tau1 = result.collocation(phasecount).s(ref+1:ref+resultcolpoints(segcount-1),2);
+            ref = ref+setup.mesh.phase(phasecount).colpoints(segcount-1);
+            segend2 = segend + resultcolpoints(segcount);
+            segindex2 = (segend:segend2)';
+            segtime2 = resulttime(segindex2);
+            segstate2 = resultstate(segindex2,:);
+            tau2 = result.collocation(phasecount).s(ref+1:ref+resultcolpoints(segcount),2);
+            % segnumber on new mesh
+            newsegcount = sum(newsub(1:segcount-1)) + 1;
+            combineflag = 0;
+            if ~sadlist(segcount) && ~sadlist(segcount - 1) && newcolpoints(newsegcount) == newcolpoints(newsegcount-1)
+                combineflag = gpopsMeshMerge(segtime1, segstate1, segtime2, segstate2, ...
+                    newcolpoints(newsegcount), setup.mesh, statescalemat, tau1, tau2);
+            end
+            % update new mesh
+            if combineflag == 1
+                mergelist = [mergelist, segcount-1, segcount];
+            end
+            % update seg
+            segstart = segend;
+        end
+        if ~isempty(mergelist)
+            [newsub, newcolpoints, newfraction] = gpopsMergeUpdate(mergelist, newsub, newcolpoints, newfraction, probinfo.displaylevel);
+        end
+        
+        % save newmesh for each phase
+        newmesh(phasecount).sub = newsub;
+        newmesh(phasecount).segerror = allerror;
+    end
+    newmesh(phasecount).colpoints = newcolpoints;
+    newmesh(phasecount).fraction = newfraction;
+    
+    % print line break
+    if probinfo.displaylevel > 0;
+        disp(' ');
+        disp(' ');
+    end
+end
+end
+
+function  [sadlist, allerror] = gpopsMeshSadlist(resulterror, numseg, interpcolpoints, mesh)
+
+% gpopsMeshSadlist
+% get sadlist: error > tolerance 1; error < tolerance 0.
+
+intstart = 2;
+sadlist = zeros(numseg,1);
+allerror = zeros(numseg,1);
+for segcount = 1:numseg
+    intend = intstart + interpcolpoints(segcount)-1;
+    intindex = (intstart:intend)';
+    
+    segerror = resulterror(intindex,:);
+    segmaxerror = max(max(segerror));
+    allerror(segcount) = segmaxerror;
+    if segmaxerror > mesh.tolerance;
+        sadlist(segcount) = 1;
+    end
+    intstart = intend+1;
+end
+end
+
+function derv = gpopsMeshDerivative(resulttime, resultstate)
+
+% gpopsMeshDerivative
+% Obtain the derivative of states
+
+numstate = size(resultstate,2);
+nder = 2;
+y= resultstate;
+x= resulttime;
+for j = 1:nder
+    y = diff(y)./(diff(x)*ones(1,numstate));
+    x = (x(1:end-1) + x(2:end))/2;
+    derv.derivative{j} = (y);
+end
+derv.time = x;
+derv.x = x;
+end
+
+function oldsegcount = gpopsPreviousSeg(oldsub)
+
+% gpopsPreviousSeg
+% get the corresponding segment number
+
+oldsegcount = oldsub;
+oldsegcount(oldsegcount >= 1) =  find(oldsegcount >= 1);
+oldsegcount(oldsegcount < 1) = -1;
+mulint = find(oldsub > 1);
+for i = length(mulint):-1:1
+    oldsegcount = [oldsegcount(1:mulint(i)-1), oldsegcount(mulint(i))*ones(1,oldsub(mulint(i))), oldsegcount(mulint(i)+1:end)];
+end
+oldsegcount(oldsegcount(1:end-1) == -1 & oldsegcount(2:end) == -1) = [];
+end
+
+function q = gpopsMeshSmoothness(oldseg, olderror, oldcolpoints, oldfraction, segmaxerror, colpoints, fraction)
+
+% gpopsMeshSmoothness
+% get the smoothness of the interval
+
+if oldseg == -1
+    q = -1; % special case
+else
+    oldsegerror = olderror(oldseg);
+    oldsegcol = oldcolpoints(oldseg);
+    oldsegfrac = oldfraction(oldseg);
+    errorratio = oldsegerror/segmaxerror; % e1/e2
+    colpointratio = oldsegcol/colpoints; % n1/n2
+    fractionratio = oldsegfrac/fraction; % h1/h2
+    if errorratio > 1
+        q = log(errorratio/colpointratio^(5/2))/log(fractionratio/colpointratio);
+        q = floor(q);
+        q = max(q, 1);
+    else
+        q = -1;
+    end
+end
+end
+
+function dervratio = gpopsDetectEdge(oldderv, curderv, numstate, segcount, oldseg)
+
+% gpopsDetectEdge
+% find the ratio of two derivative of meshes 
+
+oldmaxderv = zeros(numstate,1);
+curmaxderv = zeros(numstate,1);
+oldsegderv = oldderv.seg{oldseg}.derivative{2};
+cursegderv = curderv.seg{segcount}.derivative{2};
+% find local extrema
+signold = sign(diff(oldsegderv));
+signcur = sign(diff(cursegderv));
+oldcript = [];
+curcript = [];
+for i = 1:numstate
+    for j = 1:length(signold)-1
+        if signold(j,i)~=signold(j+1,i)
+            oldcript= [oldcript, j+1];
+        end
+        if signcur(j,i)~=signcur(j+1,i)
+            curcript = [curcript, j+1];
+        end
+    end
+    if isempty(oldcript)
+        oldmaxderv(i) = Inf;
+    else
+        oldmaxderv(i) = max(abs(oldsegderv(oldcript,i)));
+    end
+    if isempty(curcript)
+        curmaxderv(i) = Inf;
+    else
+        curmaxderv(i) = max(abs(cursegderv(curcript,i)));
+    end
+end
+% ratio of max derivative of two meshes
+dervratio = curmaxderv./oldmaxderv;
+end
+
+function removecount = gpopsMeshRemove(segtime, segstate, mesh, numstate, statescalemat, tau)
+
+% gpopsMeshRemove
+% determine how many collocation points can be removed 
+
+% coeff = gpopsPoly(segstate);
+[Npt, Nstate] = size(segstate);
+coeff = zeros(Npt,Nstate);
+tau = [tau;1];
+amat = zeros(Npt, Npt);
+for i = 1:Npt
+    V = [tau(1:i-1); tau(i+1:end)]';
+    m_i = poly(V);
+    k_i = 1/polyval(m_i, tau(i));
+    amat(i,:) = m_i*k_i;
+end
+for i = 1:Npt
+    coeff = amat(i,:)'*segstate(i,:) + coeff;
+end
+numpoints = length(segtime);
+removecount = 0;
+coeffcheck = abs(coeff)*statescalemat < mesh.tolerance*1e-3 * ones(numpoints, numstate);
+for checkcount = 1: numpoints - mesh.colpointsmin -1
+    if all(coeffcheck(checkcount, : )) 
+        removecount = removecount + 1;
+    else
+        break;
+    end
+end
+end
+
+
+function combineflag = gpopsMeshMerge(segtime1, segstate1, segtime2, segstate2, newnumcol, mesh, statescalemat, tau1, tau2)
+
+% gpopsMeshMerge
+% determine if the two mesh intervals can be merged
+
+combineflag = 0;
+Npt1 = length(segtime1);
+Npt2 = length(segtime2);
+Nstate = size(segstate1,2);
+% transform to -1 to 1
+interval1 = segtime1(end) - segtime1(1);
+interval2 = segtime2(end) - segtime2(1);
+smallinterval = max(interval1, interval2);
+
+tau1 = tau1 - 1;
+tau2 = tau2 + 1;
+tau1 = [tau1;0];
+tau2 = [tau2;2];
+amat1 = zeros(Npt1, Npt1); amat2 = zeros(Npt2, Npt2); 
+for i = 1:Npt1
+    V = [tau1(1:i-1); tau1(i+1:end)]';
+    m_i = poly(V);
+    k_i = 1/polyval(m_i, tau1(i));
+    amat1(i,:) = m_i*k_i;
+end
+
+for i = 1:Npt2
+    V = [tau2(1:i-1); tau2(i+1:end)]';
+    m_i = poly(V);
+    k_i = 1/polyval(m_i, tau2(i));
+    amat2(i,:) = m_i*k_i;
+end
+
+% interval 1
+coeff1 = zeros(Npt1,Nstate);
+for i = 1:Npt1
+    coeff1 = amat1(i,:)'*segstate1(i,:)*(smallinterval/interval1)^i + coeff1;
+end
+% interval 2
+coeff2 = zeros(Npt2,Nstate);
+for i = 1:Npt2
+    coeff2 = amat2(i,:)'*segstate2(i,:)*(smallinterval/interval2)^i + coeff2;
+end
+p1 = length(segtime1) - 1; 
+p2 = length(segtime2) - 1;
+coeff1M = coeff1(p1 - newnumcol+1: p1+1, : );
+coeff2M = coeff2(p2 - newnumcol+1: p2+1, : );
+% summation less than mesh tolerance
+[numpt, numstate] = size(coeff1M);
+errorbound = sum(abs(coeff1M - coeff2M).*(2.^(numpt-1:-1:0)'*ones(1, numstate)),1)*statescalemat;
+coeffcheck = errorbound < mesh.tolerance*ones(1,numstate);
+if all(coeffcheck)
+    combineflag = 1;
+end
+end
+
+function [newsub, newcolpoints, newfraction] = gpopsMergeUpdate(mergelist, newsub, newcolpoints, newfraction, displaylevel)
+
+% gpopsMergeUpdate
+% update the new mesh
+
+mergelist = unique(mergelist);
+numind = length(mergelist);
+while numind > 0
+    nummergeint = 1; 
+    while numind > 1 && mergelist(numind) - mergelist(numind-1) == 1
+        numind = numind - 1;
+        nummergeint = nummergeint + 1;
+    end
+    indstart = mergelist(numind);
+    indend = mergelist(numind+nummergeint - 1);
+    subtemp = cumsum(newsub);
+    newcolpoints(subtemp(indstart:indend)) = newcolpoints(subtemp(indstart));
+    newcolpoints(subtemp(indstart+1:indend)) = [];
+    newfraction(subtemp(indstart:indend)) = sum(newfraction(subtemp(indstart:indend)));
+    newfraction(subtemp(indstart+1:indend)) = [];
+    newsub(mergelist(numind) :mergelist(numind + nummergeint - 1)) = 1/nummergeint;
+    numind = numind - 1;
+end
+if displaylevel > 0
+      disp(['    Merging Mesh Intervals ',num2str(mergelist)]);
+end
+end

@@ -1,0 +1,132 @@
+function output = gpops2(usersetup)
+% gpops2
+% This is the main function for GPOPS-II
+
+% Splash
+disp(' ___________________________________________________________________ ');
+disp('|                                                                   |');
+disp('|            __________  ____  ____  _____        ________          |');
+disp('|           / ____/ __ \/ __ \/ __ \/ ___/       /  _/  _/          |');
+disp('|          / / __/ /_/ / / / / /_/ /\__ \ _____  / / / /            |');
+disp('|         / /_/ / ____/ /_/ / ____/___/ //____/_/ /_/ /             |');
+disp('|         \____/_/    \____/_/    /____/      /___/___/             |');
+disp('|                                                                   |');
+disp('| GPOPS-II Version 2.5.  Release Date: Aug 2018                     |');
+disp('|___________________________________________________________________|');
+disp('|                                                                   |');
+disp('| GPOPS-II Copyright (c) 2013-2019 Michael Patterson & Anil V. Rao. |');
+disp('|___________________________________________________________________|');
+disp('|                                                                   |');
+disp('| Downloading, using, copying, or modifying the GPOPS-II code       |');
+disp('| code constitutes an agreement to ALL of the terms of the          |');
+disp('| GPOPS-II license.                                                 |');
+disp('|___________________________________________________________________|');
+disp(' ');
+
+% The code below performs a check to see if the user's license is valid.
+if exist('gpops2License', 'file') ~= 6,
+  error('No valid GPOPS-II license file found.');
+end
+ranNum = clock;
+ranNum = 10000.*ranNum(6);
+ranNum = round(10*(ranNum - floor(ranNum)));
+switch ranNum;
+  case {0, 1, 2};
+    strIn = 'Ja0Wec';
+  case {3, 4, 5};
+    strIn = 'h3DxFq';
+  case {6, 7};
+    strIn = '9vLpNk';
+  case {8, 9, 10};
+    strIn = 'KiDl4f';
+end
+
+clear ranNum
+[strOut, numOut] = gpops2License(strIn, license);
+clear strIn
+if isa(numOut, 'int64') && (numOut ~= int64(21348307) && numOut ~= int64(1));
+  switch strOut;
+    case {'y1ewRaz2g0', 'ZAqsQhXz1x', 'yzkwQvsXgL', 'R2KXZ41s1l'};
+      if rem(int64(411227463585469),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    case {'R4E0g6a3ey', 'QBGx1dhrqZ', 'Q4BLgGvEky', 'ZG3l1B46KR'};
+      if rem(int64(274000845065767),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    case {'6o8U0eRyag', 'M0jPxqQZh1', 'PU8jLkQyvg', 'j6PolKZR41'};
+      if rem(int64(337482768513563),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    case {'eR75bg0Vya', 'qQn6t1xHZh', 'kQH5VgL6yv', 'KZ6H71lbR4'};
+      if rem(int64(293198651708429),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    otherwise
+      %delete('gpops2LicenseTest.m');
+      error('Invalid GPOPS-II License');
+  end
+else
+  error('Invalid GPOPS-II License');
+end
+clear strOut numOut
+
+% start clock to get total time
+totaltimestart = tic;
+
+[setup, probinfo, NumDefaults, DefaultStr, NumConflicts, ConflictsStr, NumWarnings, WarningsStr] = gpopsVerifySetup(usersetup);
+
+if probinfo.displaylevel > 0;
+  % print used defaults
+  if NumDefaults > 0;
+    disp(' ');
+    disp('GPOPS-II Defaults Used:');
+    for Icount = 1:NumDefaults;
+      disp(DefaultStr{Icount});
+    end
+  end
+  % print resolved conflicts
+  if NumConflicts > 0;
+    disp(' ');
+    disp('GPOPS-II Resolved Conflicts:');
+    for Icount = 1:NumConflicts;
+      disp(ConflictsStr{Icount});
+    end
+  end
+  % print warnings
+  if NumWarnings > 0;
+    disp(' ');
+    disp('GPOPS-II Warnings:');
+    for Icount = 1:NumWarnings;
+      disp(WarningsStr{Icount});
+    end
+  end
+end
+
+% get derivative dependencies
+if probinfo.displaylevel > 0;
+  disp(' ');
+  disp(' ');
+  disp('Finding Optimal Control Problem Dependencies');
+end
+probinfo = gpopsDependencies(setup, probinfo);
+
+% call mesh refinement algorithm
+output = gpopsMeshShell(setup, probinfo);
+
+% get total time
+totaltime = toc(totaltimestart);
+output.totaltime = totaltime;
+
+% save to output used defaults
+if NumDefaults > 0;
+  output.defaults = DefaultStr;
+end
+% save to output resolved conflicts
+if NumConflicts > 0;
+  output.conflicts = ConflictsStr;
+end
+% save to output warnings
+if NumWarnings > 0;
+  output.warnings = WarningsStr;
+end

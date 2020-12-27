@@ -1,0 +1,173 @@
+function [hesoutput,heslocs,grdoutput] = gpopsAdigatorContHesLoc(input,probinfo)
+% ADiGator wrapper for Continuous Hessian Locations
+% Copyright 2011-2014 Matthew J. Weinstein and Anil V. Rao
+% Distributed under the GNU General Public License version 3.0
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Inputs                           %
+% ----------------------------------------------------------------------- %
+numphase = length(input.phase);
+for phasecount = 1:numphase
+  % State
+  if isfield(input.phase(phasecount),'state')
+    x = input.phase(phasecount).state;
+    input.phase(phasecount).state   = struct('f',x,'dV',ones(size(x)));
+  end
+  % Control
+  if isfield(input.phase(phasecount),'control')
+    u = input.phase(phasecount).control;
+    input.phase(phasecount).control = struct('f',u,'dV',ones(size(u)));
+  end
+  % Time Endpoints
+  t = input.phase(phasecount).time;
+  input.phase(phasecount).time      = struct('f',t,'dV',ones(size(t)));
+  % Parameter
+  if isfield(input.phase(phasecount),'parameter')
+    par = input.phase(phasecount).parameter;
+    input.phase(phasecount).parameter = struct('f',par,'dV',ones(size(par)));
+  end
+end
+
+% ----------------------------------------------------------------------- %
+%                          Call Derivative File                           %
+% ----------------------------------------------------------------------- %
+output = feval(probinfo.adigator.conthes,input);
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Outputs                          %
+% ----------------------------------------------------------------------- %
+dynamicsflag = false;
+pathflag = false;
+integrandflag = false;
+grdflag = false;
+if isfield(output,'dynamics')
+  dynamicsflag = true;
+  hesoutput(numphase).dynamicshesloc = [];
+  heslocs(numphase).dynamicsupper = [];
+  heslocs(numphase).dynamicslower = [];
+end
+if isfield(output,'path')
+  pathflag = true;
+  hesoutput(numphase).pathhesloc = [];
+  heslocs(numphase).pathupper = [];
+  heslocs(numphase).pathlower = [];
+end
+if isfield(output,'integrand')
+  integrandflag = true;
+  hesoutput(numphase).integrandhesloc = [];
+  heslocs(numphase).integrandupper = [];
+  heslocs(numphase).integrandlower = [];
+end
+
+if nargout > 2
+  grdflag = true;
+  if dynamicsflag
+    grdoutput(numphase).dynamicsgrdloc = [];
+  end
+  if pathflag
+    grdoutput(numphase).pathgrdloc = [];
+  end
+  if integrandflag
+    grdoutput(numphase).integrandgrdloc = [];
+  end
+end
+
+for phasecount = 1:numphase
+  % Dynamics
+  if dynamicsflag
+    dynamics = output(phasecount).dynamics;
+    if isstruct(dynamics)
+      if isfield(dynamics,'dVdV_location')
+        [hesoutput(phasecount).dynamicshesloc, ...
+          heslocs(phasecount).dynamicsupper, heslocs(phasecount).dynamicslower] = ...
+          getUpperTri(dynamics.dVdV_location);
+      end
+      if grdflag && isfield(dynamics,'dV_location')
+        if size(dynamics.dV_location,2) == 1
+          dynamics.dV_location = ...
+            [ones(size(dynamics.dV_location,1),1),dynamics.dV_location];
+        end
+        grdoutput(phasecount).dynamicsgrdloc = dynamics.dV_location.';
+      end
+    end
+    if isempty(hesoutput(phasecount).dynamicshesloc)
+      hesoutput(phasecount).dynamicshesloc = zeros(3,0);
+    end
+    if isempty(grdoutput(phasecount).dynamicsgrdloc)
+      grdoutput(phasecount).dynamicsgrdloc = zeros(2,0);
+    end
+  end
+  % Path
+  if pathflag
+    path = output(phasecount).path;
+    if isstruct(path)
+      if isfield(path,'dVdV_location')
+        [hesoutput(phasecount).pathhesloc, ...
+          heslocs(phasecount).pathupper, heslocs(phasecount).pathlower] = ...
+          getUpperTri(path.dVdV_location);
+      end
+      if grdflag && isfield(path,'dV_location')
+        if size(path.dV_location,2) == 1
+          path.dV_location = ...
+            [ones(size(path.dV_location,1),1),path.dV_location];
+        end
+        grdoutput(phasecount).pathgrdloc = path.dV_location.';
+      end
+    end
+    if isempty(hesoutput(phasecount).pathhesloc)
+      hesoutput(phasecount).pathhesloc = zeros(3,0);
+    end
+    if isempty(grdoutput(phasecount).pathgrdloc)
+      grdoutput(phasecount).pathgrdloc = zeros(2,0);
+    end
+  end
+  % Integrand
+  if integrandflag
+    integrand = output(phasecount).integrand;
+    if isstruct(integrand)
+      if isfield(integrand,'dVdV_location')
+        [hesoutput(phasecount).integrandhesloc, ...
+          heslocs(phasecount).integrandupper, heslocs(phasecount).integrandlower] = ...
+          getUpperTri(integrand.dVdV_location);
+      end
+      if grdflag && isfield(integrand,'dV_location')
+        if size(integrand.dV_location,2) == 1
+          integrand.dV_location = ...
+            [ones(size(integrand.dV_location,1),1),integrand.dV_location];
+        end
+        grdoutput(phasecount).integrandgrdloc = integrand.dV_location';
+      end
+    end
+    if isempty(hesoutput(phasecount).integrandhesloc)
+      hesoutput(phasecount).integrandhesloc = zeros(3,0);
+    end
+    if isempty(grdoutput(phasecount).integrandgrdloc)
+      grdoutput(phasecount).integrandgrdloc = zeros(2,0);
+    end
+  end
+end
+end
+
+function [loc,upperloc,lowerloc] = getUpperTri(loc)
+nd = size(loc,1);
+if size(loc,2) == 3
+  x1 = loc(:,2); x2 = loc(:,3);
+else
+  f = ones(nd,1); x1 = loc(:,1); x2 = loc(:,2);
+  loc = [f x1 x2];
+end
+
+upperloc = x2 > x1;
+lowerloc = x2 < x1;
+if any(any(loc(upperloc,:) ~= loc(lowerloc,[1 3 2])))
+  % need to sort these
+  loc2 = [(1:size(loc,1)).' loc];
+  upperloc = sortrows(loc2(upperloc,:),[4 3 2]);
+  lowerloc = sortrows(loc2(lowerloc,:),[3 4 2]);
+  upperloc = upperloc(:,1);
+  lowerloc = lowerloc(:,1);
+end
+loc(lowerloc,:) = [];
+
+loc = loc.';
+end

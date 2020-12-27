@@ -1,0 +1,477 @@
+function derivativemap = gpopsDependAnalytic(probinfo, setup)
+
+% gpopsDependAnalytic
+% This function gets the optimal control problem dependencies for either
+% the first or second derivative levels from the user supplied optimal
+% control problem derivative functions
+
+% note
+% ___nvc = number of variables that have derivatives with respect to them
+
+% get OCP sizes
+numphase = probinfo.numphase;
+numstate = probinfo.numstate;
+numcontrol = probinfo.numcontrol;
+numintegral = probinfo.numintegral;
+numpath = probinfo.numpath;
+numparameters = probinfo.numparameter;
+numeventgroup = probinfo.numeventgroup;
+
+% get derivatve level
+derivativelevel = probinfo.derivativelevel;
+
+% get inputs from guess
+[continput, endpinput] = gpopsInputInterpGuessInternal(setup,10);
+
+% evaluate the first derivative function on the initial guess
+contgrd = feval(probinfo.contgrd, continput);
+endpgrd = feval(probinfo.endpgrd, endpinput);
+
+if derivativelevel == 2;
+  % evaluate the second derivative function on the initial guess
+  conthes = feval(probinfo.conthes, continput);
+  endphes = feval(probinfo.endphes, endpinput);
+end
+
+% total number of endpoint variables
+numOCPendpvar = 2*sum(numstate,2)+sum(numintegral,2)+2*numphase+numparameters;
+
+% endpoint first derivative variable map full
+%varmap1 = 1:numOCPendpvar;
+
+% objective first derivative map
+objnnz1 = size(endpgrd.objectivegrdloc,2);
+if objnnz1 == 0;
+  objvarmap1 = zeros(objnnz1,0);
+  objfunmap1 = zeros(objnnz1,0);
+else
+  [objvarmap1, objsort1] = sort(endpgrd.objectivegrdloc);
+  objfunmap1 = 1:objnnz1;
+  objfunmap1 = objfunmap1(objsort1);
+end
+
+% event variable first derivative map
+if numeventgroup ~= 0;
+  % preallocate eventfunmap1, eventfunmap1, and eventnnz1
+  endpeventmap1(numeventgroup).first = [];
+  eventfunmap1(numeventgroup).first = [];
+  eventnnz1 = zeros(1,numeventgroup);
+  
+  % initiate eventvarmap1 as empty
+  eventvarmap1 = [];
+  
+  % event first derivative function map full
+  for eventgroupcount = 1:numeventgroup;
+    % event first derivative variable map full
+    % all the unique variables of diff from all eventgroups
+    eventvarmap1 = unique([endpgrd.eventgroup(eventgroupcount).eventgrdloc(2,:), eventvarmap1]);
+    
+    % nnz in event group
+    eventnnz1(eventgroupcount) = size(endpgrd.eventgroup(eventgroupcount).eventgrdloc,2);
+  end
+  
+  % endpoint first derivative variable map full
+  endpvarmap1 = unique([eventvarmap1, objvarmap1]);
+  
+  % enter locations into endpobjmap
+  endpobjmap1 = zeros(1,numOCPendpvar);
+  endpobjmap1(endpgrd.objectivegrdloc) = 1:objnnz1;
+  
+  % reduce map to only include variables in endpvarmap1
+  endpobjmap1 = endpobjmap1(1,endpvarmap1);
+  
+  for eventgroupcount = 1:numeventgroup;
+    % get number of event constraints
+    numevent = probinfo.numevent(eventgroupcount);
+    
+    % enter locations into eventmap
+    eventmap1 = zeros(numevent,numOCPendpvar);
+    
+    if eventnnz1(eventgroupcount) ~= 0
+      % find eventgrdloc and eventgrdInd1
+      %sub2ind([numevent, numOCPendpvar], endpgrd.eventgroup(eventgroupcount).eventgrdloc(1,:), endpgrd.eventgroup(eventgroupcount).eventgrdloc(2,:))
+      eventgrdInd1 = (endpgrd.eventgroup(eventgroupcount).eventgrdloc(2,:)-1)*numevent + endpgrd.eventgroup(eventgroupcount).eventgrdloc(1,:);
+      eventmap1(eventgrdInd1) = 1:eventnnz1(eventgroupcount);
+    end
+    
+    % reduce map to only include variables in varmap
+    eventfunmap1(eventgroupcount).first = eventmap1(:,eventvarmap1);
+    endpeventmap1(eventgroupcount).first = eventmap1(:,endpvarmap1);
+  end
+else
+  % endpoint first derivative variable map full
+  endpvarmap1 = objvarmap1;
+  endpobjmap1 = objfunmap1;
+end
+
+
+% endpoint second derivative map
+if derivativelevel == 2;
+  % number of elements in lower triangle
+  numOCPendptri = (numOCPendpvar.^2 + numOCPendpvar)/2;
+  
+  % preallocate endpoint second derivative var map
+  endpvarmap2 = zeros(2,numOCPendptri);
+  
+  % endpoint second derivative variable map full
+  locend = 0;
+  for endvarcount = 1:numOCPendpvar;
+    endprow = endvarcount*ones(1,endvarcount);
+    endpcol = 1:endvarcount;
+    locstart = locend + 1;
+    locend   = locstart + endvarcount - 1;
+    endpvarmap2(:,locstart:locend) = [endprow; endpcol];
+  end
+  
+  % get objnnz2 and obj second derivative pair number
+  objnnz2 = size(endphes.objectivehesloc,2);
+  if objnnz2 == 0;
+    objvarmap2pair = [];
+  else
+    objvarmap2pair = (endphes.objectivehesloc(2,:).*(endphes.objectivehesloc(2,:) - 1))/2 + endphes.objectivehesloc(1,:);
+  end
+  
+  % get endpvarmap2pair
+  endpvarmap2pair = unique(objvarmap2pair);
+  
+  % objective second derivative map
+  objfunmap2 = zeros(1, numOCPendptri);
+  objfunmap2(objvarmap2pair) = 1:objnnz2;
+  
+  if numeventgroup ~= 0;
+    % preallocate eventnnz2 and event second derivative pair number
+    eventnnz2 = zeros(1,numeventgroup);
+    eventvarmap2pair(numeventgroup).event = [];
+    endpeventmap2(numeventgroup).second = [];
+    
+    % event second derivative function map
+    for eventgroupcount = 1:numeventgroup;
+      % get number of event constraints
+      numevent = probinfo.numevent(eventgroupcount);
+      
+      % get eventnnz2 and event second derivative pair number
+      eventnnz2(1,eventgroupcount) = size(endphes.eventgroup(eventgroupcount).eventhesloc,2);
+      if eventnnz2(1,eventgroupcount) == 0;
+        %eventvarmap2pair(eventgroupcount).event(1,eventgroupcount) = [];
+      else
+        eventvarmap2pair(eventgroupcount).event = (endphes.eventgroup(eventgroupcount).eventhesloc(3,:).*(endphes.eventgroup(eventgroupcount).eventhesloc(3,:) - 1))/2 + endphes.eventgroup(eventgroupcount).eventhesloc(2,:);
+      end
+      
+      % event second derivative map
+      endpeventmap2(eventgroupcount).second = zeros(numevent, numOCPendptri);
+      if eventnnz2(1,eventgroupcount) ~= 0;
+        % find eventgrdInd2
+        eventgrdInd2 = (eventvarmap2pair(eventgroupcount).event-1)*numevent + endphes.eventgroup(eventgroupcount).eventhesloc(1,:);
+        
+        % assign locations
+        endpeventmap2(eventgroupcount).second(eventgrdInd2) = 1:eventnnz2(1,eventgroupcount);
+        
+        % update endpvarmap2pair
+        endpvarmap2pair = unique([eventvarmap2pair(eventgroupcount).event, endpvarmap2pair]);
+      end
+    end
+  end
+  
+  % get number of second derivative differentiation pairs of endpoint
+  % function
+  endpnvc2 = numel(endpvarmap2pair);
+  
+  % reduce map to only include variables in varmap
+  endpvarmap2 = endpvarmap2(:,endpvarmap2pair);
+  objfunmap2 = objfunmap2(:,endpvarmap2pair);
+  if numeventgroup ~= 0;
+    for eventgroupcount = 1:numeventgroup;
+      endpeventmap2(eventgroupcount).second = endpeventmap2(eventgroupcount).second(:,endpvarmap2pair);
+    end
+  end
+end
+
+% preallocate contmap for first derivatives
+contmap1(numphase).contvarmap1 = [];
+contmap1(numphase).dynamicsmap1 = [];
+dynamicsnnz1 = zeros(1,numphase);
+contnvc1 = zeros(1,numphase);
+if sum(numpath,2) ~= 0;
+  contmap1(numphase).pathmap1 = [];
+  pathnnz1 = zeros(1,numphase);
+end
+if sum(numintegral,2) ~= 0;
+  contmap1(numphase).integrandmap1 = [];
+  integrandnnz1 = zeros(1,numphase);
+end
+
+% preallocate contmap for second derivatives
+if derivativelevel == 2;
+  contmap2(numphase).contvarmap2 = [];
+  contmap2(numphase).dynamicsmap2 = [];
+  dynamicsnnz2 = zeros(1,numphase);
+  contnvc2 = zeros(1,numphase);
+  if sum(numpath,2) ~= 0;
+    contmap2(numphase).pathmap2 = [];
+    pathnnz2 = zeros(1,numphase);
+  end
+  if sum(numintegral,2) ~= 0;
+    contmap2(numphase).integrandmap2 = [];
+    integrandnnz2 = zeros(1,numphase);
+  end
+end
+
+% continuous function derivative map
+for phasecount = 1:numphase;
+  % get OCP sizes in each phase
+  numstatep = numstate(phasecount);
+  numcontrolp = numcontrol(phasecount);
+  numintegralp = numintegral(phasecount);
+  numpathp = numpath(phasecount);
+  
+  % total number of continuous variables in phase
+  numOCPcontvar = numstatep+numcontrolp+1+numparameters;
+  
+  % get first derivative continuous variable map in phase
+  contvarmap1 = unique(contgrd(phasecount).dynamicsgrdloc(2,:));
+  
+  % get number of dynamics first derivatives
+  dynamicsnnz1(1,phasecount) = size(contgrd(phasecount).dynamicsgrdloc,2);
+  
+  % get dynamics first derivative map in phase
+  dynamicsmap1 = zeros(numstatep,numOCPcontvar);
+  dynamicsInd1 = (contgrd(phasecount).dynamicsgrdloc(2,:) - 1)*numstatep + contgrd(phasecount).dynamicsgrdloc(1,:);
+  dynamicsmap1(dynamicsInd1) = 1:dynamicsnnz1(1,phasecount);
+  
+  % find if path constraints are in phase
+  if numpathp ~= 0;
+    % update first derivative continuous variable map in phase
+    contvarmap1 = unique([contvarmap1, contgrd(phasecount).pathgrdloc(2,:)]);
+    
+    % get number of path first derivatives
+    pathnnz1(1,phasecount) = size(contgrd(phasecount).pathgrdloc,2);
+    
+    % get dynamics first derivative map in phase
+    pathmap1 = zeros(numpathp,numOCPcontvar);
+    pathInd1 = (contgrd(phasecount).pathgrdloc(2,:) - 1)*numpathp + contgrd(phasecount).pathgrdloc(1,:);
+    pathmap1(pathInd1) = 1:pathnnz1(1,phasecount);
+  end
+  
+  % find if intergal constraints are in phase
+  if numintegralp ~= 0;
+    % update first derivative continuous variable map in phase
+    contvarmap1 = unique([contvarmap1, contgrd(phasecount).integrandgrdloc(2,:)]);
+    
+    % get number of path first derivatives
+    integrandnnz1(1,phasecount) = size(contgrd(phasecount).integrandgrdloc,2);
+    
+    % get dynamics first derivative map in phase
+    integrandmap1 = zeros(numintegralp,numOCPcontvar);
+    integrandInd1 = (contgrd(phasecount).integrandgrdloc(2,:) - 1)*numintegralp + contgrd(phasecount).integrandgrdloc(1,:);
+    integrandmap1(integrandInd1) = 1:integrandnnz1(1,phasecount);
+  end
+  
+  % save contvarmap1 to stucture contmap1
+  contmap1(phasecount).contvarmap1 = contvarmap1;
+  
+  % get number of variables with derivatives with respect to them
+  contnvc1(1,phasecount) = size(contvarmap1,2);
+  
+  % save dynamicsmap1 to stucture contmap1
+  % reduce map to only include variables in varmap
+  contmap1(phasecount).dynamicsmap1 = dynamicsmap1(:,contvarmap1);
+  
+  if numpathp ~= 0;
+    % save pathmap1 to stucture contmap1
+    % reduce map to only include variables in varmap
+    contmap1(phasecount).pathmap1 = pathmap1(:,contvarmap1);
+  end
+  
+  if numintegralp ~= 0;
+    % save integrandmap1 to stucture contmap1
+    % reduce map to only include variables in varmap
+    contmap1(phasecount).integrandmap1 = integrandmap1(:,contvarmap1);
+  end
+  
+  
+  
+  
+  
+  if derivativelevel == 2;
+    % number of elements in upper triangle
+    numOCPconttri = (numOCPcontvar.^2 + numOCPcontvar)/2;
+    
+    % preallocate endpoint second derivative var map
+    contvarmap2 = zeros(2,numOCPconttri);
+    
+    % endpoint second derivative variable map full
+    locend = 0;
+    for contvarcount = 1:numOCPcontvar;
+      controw = contvarcount*ones(1,contvarcount);
+      contcol = 1:contvarcount;
+      locstart = locend + 1;
+      locend   = locstart + contvarcount - 1;
+      contvarmap2(:,locstart:locend) = [controw; contcol];
+    end
+    
+    % get dynamicsnnz2 and dynamics second derivative pair number for phase
+    dynamicsnnz2(1,phasecount) = size(conthes(phasecount).dynamicshesloc,2);
+    if dynamicsnnz2(1,phasecount) == 0;
+      dynamicsvarmap2pair = [];
+    else
+      dynamicsvarmap2pair = (conthes(phasecount).dynamicshesloc(3,:).*(conthes(phasecount).dynamicshesloc(3,:) - 1))/2 + conthes(phasecount).dynamicshesloc(2,:);
+    end
+    
+    % get contvarmap2pair
+    contvarmap2pair = unique(dynamicsvarmap2pair);
+    
+    % dynamics second derivative map
+    dynamicsmap2 = zeros(numstatep, numOCPconttri);
+    
+    if dynamicsnnz2(1,phasecount) ~= 0;
+      % find dynamicsInd2
+      dynamicsInd2 = (dynamicsvarmap2pair-1)*numstatep + conthes(phasecount).dynamicshesloc(1,:);
+      
+      % assign locations
+      dynamicsmap2(dynamicsInd2) = 1:dynamicsnnz2(1,phasecount);
+    end
+    % save dynamicsmap2 in contmap structure
+    contmap2(phasecount).dynamicsmap2 = dynamicsmap2;
+    
+    % find if path constraints are in phase
+    if numpathp ~= 0;
+      % get pathnnz2 and path second derivative pair number for phase
+      pathnnz2(1,phasecount) = size(conthes(phasecount).pathhesloc,2);
+      if pathnnz2(1,phasecount) == 0;
+        pathvarmap2pair = [];
+      else
+        pathvarmap2pair = (conthes(phasecount).pathhesloc(3,:).*(conthes(phasecount).pathhesloc(3,:) - 1))/2 + conthes(phasecount).pathhesloc(2,:);
+      end
+      
+      % update contvarmap2pair
+      contvarmap2pair = unique([contvarmap2pair, pathvarmap2pair]);
+      
+      % path second derivative map
+      pathmap2 = zeros(numpathp, numOCPconttri);
+      
+      if pathnnz2(1,phasecount) ~= 0;
+        % find dynamicsInd2
+        pathInd2 = (pathvarmap2pair-1)*numpathp + conthes(phasecount).pathhesloc(1,:);
+        
+        % assign locations
+        pathmap2(pathInd2) = 1:pathnnz2(1,phasecount);
+      end
+      % save pathmap2 in contmap structure
+      contmap2(phasecount).pathmap2 = pathmap2;
+    end
+    
+    % find if intergal constraints are in phase
+    if numintegralp ~= 0;
+      % get integrandnnz2 and integrand second derivative pair number for phase
+      integrandnnz2(1,phasecount) = size(conthes(phasecount).integrandhesloc,2);
+      if integrandnnz2(1,phasecount) == 0;
+        integrandvarmap2pair = [];
+      else
+        integrandvarmap2pair = (conthes(phasecount).integrandhesloc(3,:).*(conthes(phasecount).integrandhesloc(3,:) - 1))/2 + conthes(phasecount).integrandhesloc(2,:);
+      end
+      
+      % update contvarmap2pair
+      contvarmap2pair = unique([contvarmap2pair, integrandvarmap2pair]);
+      
+      % path second derivative map
+      integrandmap2 = zeros(numintegralp, numOCPconttri);
+      
+      if integrandnnz2(1,phasecount) ~= 0;
+        % find dynamicsInd2
+        integrandInd2 = (integrandvarmap2pair-1)*numintegralp + conthes(phasecount).integrandhesloc(1,:);
+        
+        % assign locations
+        integrandmap2(integrandInd2) = 1:integrandnnz2(1,phasecount);
+      end
+      % save pathmap2 in contmap structure
+      contmap2(phasecount).integrandmap2 = integrandmap2;
+    end
+    
+    % get number of second derivative differentiation pairs of continuous
+    % function in phase
+    contnvc2(1,phasecount) = size(contvarmap2pair,2);
+    
+    
+    % reduce map to only include variables in varmap
+    contmap2(phasecount).contvarmap2 = contvarmap2(:,contvarmap2pair);
+    
+    contmap2(phasecount).dynamicsmap2 = dynamicsmap2(:,contvarmap2pair);
+    if numpathp ~= 0;
+      contmap2(phasecount).pathmap2 = pathmap2(:,contvarmap2pair);
+    end
+    if numintegralp ~= 0;
+      contmap2(phasecount).integrandmap2 = integrandmap2(:,contvarmap2pair);
+    end
+  end
+end
+
+
+% Save in derivativemap structure
+% endp first derivative map
+derivativemap.endpnvc1 = size(endpvarmap1,2);
+derivativemap.endpvarmap1 = endpvarmap1;
+derivativemap.endpobjmap1 = endpobjmap1;
+if numeventgroup ~= 0;
+  derivativemap.endpeventmap1 = endpeventmap1;
+end
+
+% first derivative obj and event nnz
+derivativemap.objnnz1 = objnnz1;
+if numeventgroup ~= 0;
+  derivativemap.eventnnz1 = eventnnz1;
+end
+
+% first derivative obj map
+derivativemap.objnvc1 = size(objvarmap1,2);
+derivativemap.objvarmap1 = objvarmap1;
+derivativemap.objfunmap1 = objfunmap1;
+
+% first derivative event map
+if numeventgroup ~= 0;
+  derivativemap.eventnvc1 = size(eventvarmap1,2);
+  derivativemap.eventvarmap1 = eventvarmap1;
+  derivativemap.eventfunmap1 = eventfunmap1;
+end
+
+% first derivative cont map
+derivativemap.contnvc1 = contnvc1;
+derivativemap.contmap1 = contmap1;
+
+% first derivative dynamics, path, and intergrand nnz
+derivativemap.dynamicsnnz1 = dynamicsnnz1;
+if sum(numpath,2) ~= 0;
+  derivativemap.pathnnz1 = pathnnz1;
+end
+if sum(numintegral,2) ~= 0;
+  derivativemap.integrandnnz1 = integrandnnz1;
+end
+
+% second derivative map
+if derivativelevel == 2;
+  % second derivative endp map
+  derivativemap.endpnvc2 = endpnvc2;
+  derivativemap.endpvarmap2 = endpvarmap2;
+  derivativemap.endpobjmap2 = objfunmap2;
+  if numeventgroup ~= 0;
+    derivativemap.endpeventmap2 = endpeventmap2;
+  end
+  
+  % second derivative obj and event nnz
+  derivativemap.objnnz2 = objnnz2;
+  if numeventgroup ~= 0;
+    derivativemap.eventnnz2 = eventnnz2;
+  end
+  
+  % second derivative cont map
+  derivativemap.contnvc2 = contnvc2;
+  derivativemap.contmap2 = contmap2;
+  
+  % second derivative dynamics, path, and intergrand nnz
+  derivativemap.dynamicsnnz2 = dynamicsnnz2;
+  if sum(numpath,2) ~= 0;
+    derivativemap.pathnnz2 = pathnnz2;
+  end
+  if sum(numintegral,2) ~= 0;
+    derivativemap.integrandnnz2 = integrandnnz2;
+  end
+end

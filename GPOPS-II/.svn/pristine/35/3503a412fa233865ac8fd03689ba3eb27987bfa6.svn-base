@@ -1,0 +1,1111 @@
+@BOOK{Abramowitz1,
+  AUTHOR =       {Milton Abramowitz and Irene Stegun},
+  TITLE =        {Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical Tables},
+  PUBLISHER =    {Dover Publications},
+  Address =      {New York},
+  YEAR =         {1965},
+  pages =        {887--889},
+}
+
+@BOOK{Bate1,
+  AUTHOR =       {R.~R.~Bate and D.~D.~Mueller and J.~E.~White},
+  TITLE =        {Fundamentals of Astrodynamics},
+  PUBLISHER =    {Dover Publications},
+  YEAR =         {1971},
+}
+
+@ARTICLE{BensonJGCD2006,
+  AUTHOR =       {D.~A. Benson and G.~T.~Huntington and Thorvaldsen, T.~P. and Rao, A.~V.},
+  TITLE =        {Direct Trajectory Optimization and Costate Estimation via an Orthogonal Collocation Method},
+  JOURNAL =      {Journal of Guidance, Control, and Dynamics},
+  YEAR =         {2006},
+  volume =       {29},
+  number =       {6},
+  pages =        {1435-1440},
+  month =        {November--December},
+}
+
+@PHDTHESIS{Benson1,
+  AUTHOR =       {Benson, D.~A.},
+  TITLE =        {A Gauss Pseudospectral Transcription for Optimal Control},
+  SCHOOL =       {Department of Aeronautics and Astronautics, Massachusetts Institute of Technology},
+  Address =      {Cambridge, Massachusetts},
+  YEAR =         {2004},
+}
+
+@BOOK{Berz1,
+  AUTHOR =       {M. Berz and C. Bishop and G. Croliss and A. Griewank and Eds},
+  TITLE =        {Computational Differentiation: Techniques, Applications and Tools},
+  PUBLISHER =    {SIAM},
+  YEAR =         {1996},
+  address =      {Philadelphia, Pennsylvania},
+}
+
+@ARTICLE{Bischof1992AGD,
+       author = "Christian H. Bischof and Alan Carle and George F. Corliss and Andreas Griewank and
+         Paul D. Hovland",
+       title = "{ADIFOR}: {G}enerating Derivative Codes from {F}ortran Programs",
+       journal = "Scientific Programming",
+       VOLUME = "1",
+       NUMBER = "1",
+       year = "1992",
+       PAGES = "11--29",
+       COMMENT = "ADIFOR Working Note \# 1. Also appeared as Preprint MCS--P263--0991,
+         Mathematics and Computer Science Division, Argonne National Laboratory, Argonne, Ill., September
+         1991, and as Technical Report 91185, Center for Research in Parallel Computation, Rice University,
+         Houston, Tex., 1991.",
+       REFERRED = "[Bischof1991UAt]; [Bisc91h].",
+       ad_tools = "ADIFOR"
+}
+
+@ARTICLE{Bischof1996AAD,
+       author = "Christian H.~Bischof and Alan Carle and Peyvand Khademi and Andrew Mauer",
+       title = "{ADIFOR} 2.0: Automatic Differentiation of {F}ortran 77 Programs",
+       journal = "IEEE Computational Science \& Engineering",
+       pages = "18--32",
+       key = "Bischof1996AAD",
+       comment = "Preprint MCS-P481-1194, Mathematics and Computer Science Division, Argonne National
+         Laboratory, and CRPC-TR94491, Center for Research on Parallel Computation, Rice University.",
+       referred = "[Abate2002IAw], [Bischof2002ACS], [Caillau2002COC], [Kim2002SAa], [More2002ADT],
+         [Tijskens2002EOO].",
+       year = "1996",
+       volume = "3",
+       number = "3",
+       ad_tools = "ADIFOR"
+} 
+
+@ARTICLE{Bischof1,
+  AUTHOR =       {C. Bischof and B. Lang and A. Vehreschild},
+  TITLE =        {Automatic differentiation for {MATLAB} programs},
+  JOURNAL =      {Proceedings in Applied Mathematics and Mechanics},
+  YEAR =         {2003},
+  volume =       {2},
+  number =       {1 Joh Wiley},
+  pages =        {50-53},
+}
+
+@ARTICLE{Bryson1,
+  AUTHOR =       {A.~E. Bryson and M.~N. Desai and W.~C. Hoffman},
+  TITLE =        {Energy-State Approximation in Performance Optimization of Supersonic Aircraft},
+  JOURNAL =      {AIAA Journal of Aircraft},
+  YEAR =         {1969},
+  volume =       {6},
+  number =       {6},
+  pages =        {481--488},
+}
+
+@BOOK{Bryson2,
+  AUTHOR =       {A.~E.~Bryson and Y-C Ho},
+  TITLE =        {Applied Optimal Control},
+  PUBLISHER =    {Hemisphere Publishing},
+  YEAR =         1975,
+  address =      {New York},
+}
+
+@MANUAL{Coleman1,
+  TITLE =        {ADMAT: An Automatic Differentiation Toolbox for {MATLAB}. Technical Report},
+  author =       {T.~F. Coleman and A. Verma},
+  organization = {Computer Science Department, Cornell University},
+  year =         {1998},
+}
+
+@ARTICLE{Coleman2,
+  AUTHOR =       {T.~F. Coleman and A. Verma},
+  TITLE =        {The Efficient Computation of Sparse Jacobian Matrices Using Automatic Differentiation},
+  JOURNAL =      {{SIAM} Journal on Scientific Computing},
+  YEAR =         1998,
+  volume =       19,
+  number =       4,
+  pages =        {1210--1233},
+}
+
+@ARTICLE{Coleman3,
+  AUTHOR =       {T.~F. Coleman and A. Verma},
+  TITLE =        {{ADMIT-1}: Automatic Differentiation and {MATLAB} Interface Toolbox},
+  JOURNAL =      {{ACM} Transactions on Mathematical Software},
+  YEAR =         {1998},
+  volume =       {26},
+  number =       {1},
+  pages =        {150--175},
+  month =        {March},
+}
+
+@article{Darby2,
+  author =       {C.~L.~Darby and W.~W.~Hager and A.~V.~Rao},
+  TITLE =        {An $hp$--Adaptive Pseudospectral Method for Solving Optimal Control Problems},
+  JOURNAL =      {Optimal Control Applications and Methods},
+  volume  =      {32},
+  number =       {4},
+  month =        {July--August},
+  year =         {2011},
+  pages =        {476--502},
+}
+
+@Article{Darby3,
+  author = 	 {Christopher L.~Darby and W.~W.~Hager and Anil V.~Rao},
+  title = 	 {Direct Trajectory Optimization Using a Variable Low-Order Adaptive Pseudospectral Method}, 
+  journal  =     {Journal of Spacecraft and Rockets},
+  volume =       {48},
+  number =       {3},
+  month =        {May--June},
+  year = 	 {2011},
+  pages =        {433-445},
+}
+
+@article{Duff1,
+ author = {Iain S.~Duff},
+ title = {{MA}57---a Code for the Solution of Sparse Symmetric Definite and Indefinite Systems},
+ journal = {ACM Transactions on Mathematical Software},
+ volume = {30},
+ number = {2},
+ year = {2004},
+ month = {April--June},
+ issn = {0098-3500},
+ pages = {118--144},
+ doi = {http://doi.acm.org/10.1145/992200.992202},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ }
+
+@Article{Francolin2014a,
+  author = 	 {C.~C.~Francolin and W.~W.~Hager and A.~V.~Rao},
+  title = 	 {Costate Approximation in Optimal Control Using Integral Gaussian Quadrature Collocation Methods},
+  journal = 	 {Optimal Control Applications and Methods},
+  year = 	 {2014.  DOI 10.1002/oca2112},
+  OPTkey = 	 {},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  OPTpages = 	 {},
+  month = 	 {Published Online in Early View, January},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+
+@Article{Forth0,
+  author = 	 {S.~A.~Forth and M.~Tadjouddine and J.~D.~Pryce and J.~K.~Reid},
+  title = 	 {Jacobian Code Generated by Source Transformation and Vertex Elimination Can Be As Efficient As Hand--Coding},
+  journal = 	 {ACM Transactions on Mathematical Software},
+  year = 	 {2004},
+  OPTkey = 	 {},
+  volume = 	 {30},
+  number = 	 {4},
+  pages = 	 {266--299},
+  month = 	 {October--December},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@ARTICLE{Forth1,
+  AUTHOR =       {S.~A. Forth},
+  TITLE =        {An Efficient Overloaded Implementation of Forward Mode Automatic Differentiation in {MATLAB}},
+  JOURNAL =      {ACM Transactions on Mathematical Software},
+  YEAR =         {2006},
+  volume =       {32},
+  number =       {2},
+  pages =        {195-222},
+  month =        {April--June},
+}
+
+@MANUAL{Forth2,
+  TITLE =        {User's Guide for MAD - a {MATLAB} Automatic Differentation Toolbox (TOMLAB/MAD) Version 1.4},
+  author =       {S.~A. Forth and M.~M. Edvall},
+  month =        {June},
+  organization = {TOMLAB Optimization},
+  year =         {2007},
+}
+
+@ARTICLE{Garg1,
+  author =       {D.~Garg and M.~A.~Patterson and W.~W.~Hager and A.~V.~Rao and D.~A.~Benson and G.~T.~Huntington},
+  TITLE =        {A Unified Framework for the Numerical Solution of Optimal Control Problems Using Pseudospectral Methods},
+  JOURNAL =      {Automatica},
+  month =        {November},
+  year =         {2010},
+  volume =       {46},
+  number =       {11},
+  pages =        {1843--1851},
+}
+
+@ARTICLE{Garg2,
+  author =       {D.~Garg and W.~W.~Hager and A.~V.~Rao},
+  TITLE =        {Pseudospectral Methods for Solving Infinite-Horizon Optimal Control Problems},
+  JOURNAL =      {Automatica},
+  volume  =      {47},
+  number =       {4},
+  month =        {April},
+  year =         {2011},
+  pages =        {829--837},
+}
+
+@ARTICLE{Garg3,
+  author =       {D.~Garg and M.~A.~Patterson and C.~L.~Darby and C.~Francolin and G.~T.~Huntington and W.~W.~Hager and A.~V.~Rao},
+  TITLE =        {Direct Trajectory Optimization and Costate Estimation of Finite-Horizon and Infinite-Horizon Optimal Control Problems via a {R}adau Pseudospectral Method},
+  JOURNAL =      {Computational Optimization and Applications},
+  month =        {June},
+  year  =        {2011},
+  pages =        {335--358},
+  volume =       {49},
+  number =       {2},
+}
+
+
+@InBook{Griewank0,
+  author = 	 {Andreas Griewank and Shawn Reese},
+  editor = 	 {A.~Griewank and G.~F.~Corliss},
+  title = 	 {Automatic Differentiation of Algorithms:  Theory, Implementation, and Application, {\em A.~Griewank and G.~F.~Corliss, eds.}},
+  year = 	 {1991},
+  OPTkey = 	 {},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  address = 	 {Philadelphia, PA, 271--280},
+  OPTedition = 	 {},
+  OPTmonth = 	 {},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+
+
+@BOOK{Griewank1,
+  AUTHOR =       {A. Griewank},
+  TITLE =        {Evaluating Derivatives: Principles and Techniques of Algorithmic Differentiation. Frontiers in Appl. Mathematics},
+  PUBLISHER =    {SIAM Press},
+  YEAR =         {2008},
+  address =      {Philadelphia, Pennsylvania},
+}
+
+@ARTICLE{Griewank2,
+  AUTHOR =       {A. Griewank and D. Juedes and J. Utke},
+  TITLE =        {Algorithm 755: {ADOL-C}, a Package for the Automatic Differentiation of Algorithms Written in C/C++},
+  JOURNAL =      {ACM Transactions on Mathematical Software},
+  YEAR =         {1996},
+  volume =       {22},
+  number =       {2},
+  pages =        {131-167},
+  month =        {April--June},
+}
+
+@TECHREPORT{Hascoet2004TUG,
+       address = "Sophia Antipolis",
+       institution = "INRIA",
+       abstract = "This is the user's manual for the version 2.1 of the Automatic Differentiation
+         tool TAPENADE. Given a source computer program that computes a differentiable mathematical function
+         F, TAPENADE builds a new source program that computes some of the derivatives of F, specifically
+         directional derivatives (``tangent mode'') and gradients (``reverse mode'').
+         This report summarizes the mathematical justifications of Automatic Differentiation, then describes
+         in full detail the differentiation model that TAPENADE implements. Our goal is to give the users of
+         TAPENADE a precise understanding of the actions and choices made while differentiating programs, so
+         as to improve their confidence in the produced source programs. This report documents all the
+         available options and parameterizations that the users can give to TAPENADE, and conversely all the
+         diagnosis and requirements that TAPENADE may issue towards the users. After a brief description of
+         TAPENADE's architecture and performances, this report describes more fully the validation and
+         improvement techniques for differentiated codes.",
+       ad_tools = "TAPENADE",
+       ad_theotech = "General",
+       author = "Laurent Hasco{\"e}t and Val{\'e}rie Pascual",
+       title = "{TAPENADE}~2.1 User's Guide",
+       number = "300",
+       mon = "sep",
+       year = "2004",
+       type = "Rapport Technique",
+       url = "http://www.inria.fr/rrrt/rt-0300.html"
+}
+
+@BOOK{Maple10,
+author = {Michael B.~Monagan and Keith O.~Geddes and K.~Michael Heal and George Labahn and Stefan M.~Vorkoetter and James McCarron and Paul DeMarco},
+title = {Maple~10 Programming Guide},
+publisher = {Maplesoft}, 
+year = {2005},
+volume = {},
+series = {},
+address = {Waterloo ON, Canada},
+edition = {},
+month = {},
+note = {},
+key = {},
+annote = {In acknowledging any {Maple} work, a statement similar
+to the following should be used. (Changes with respect to the
+exact use of {Maple} are expected.) ``The computations in this paper
+were performed by using Maple${}^\mathrm{TM}$."},
+} 
+
+@article{Martins2003,
+ author = {Martins, Joaquim R. R. A. and Sturdza, Peter and Alonso, Juan J.},
+ title = {The Complex-Step Derivative Approximation},
+ journal = {ACM Transactions on Mathematical Software},
+ volume = {29},
+ number = {3},
+ year = {2003},
+ month = {July--September},
+ issn = {0098-3500},
+ pages = {245--262},
+ doi = {http://doi.acm.org/10.1145/838250.838251},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ }
+
+
+@BOOK{Mathematica1,
+  AUTHOR =       {Wolfram},
+  TITLE =        {Mathematica Edition: Version 7.0},
+  PUBLISHER =    {Wolfram Research, Inc.},
+  YEAR =         {2008},
+  address =      {Champaign, Illinois},
+}
+
+@CONFERENCE{Verma1,
+  author = 	 {A. Verma},
+  title = 	 {{ADMAT}: Automatic differentiation in {MATLAB} using object oriented methods},
+  year =         {1998a},
+  booktitle =    {SIAM Interdisciplinary Workshop on Object Oriented Methods for Interoperability},
+  publisher =    {SIAM, National Science Foundation},
+  Address   =    {Yorktown Heights, New York},
+  pages =        {174–183},
+}
+
+@PHDTHESIS{Verma2,
+  AUTHOR =       {A. Verma},
+  TITLE =        {Structured automatic differentiation},
+  SCHOOL =       {Cornell University Department of Computer Science},
+ Address   =    {Ithaca, NY},
+  YEAR =         {1998b},
+}
+
+
+
+@Article{Griffith2005,
+  author = 	 {D.~T.~Griffith and J.~D.~Turner and J.~L.~Junkins},
+  title = 	 {Automatic Generation and Integration of Equations of Motion for Flexible Multibody Dynamical Systems},
+  journal = 	 {Journal of the Astronautical Sciences},
+  year = 	 {2005},
+  OPTkey = 	 {},
+  volume = 	 {53},
+  number = 	 {3},
+  pages = 	 {251--279},
+  month = 	 {July--September},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@InProceedings{Bai1,
+  author = 	 {Xiaoli Bai and James Turner and John Junkins},
+  title = 	 {Dynamic Analysis and Control of a Stewart Platform Using A Novel Automatic Differentiation Method},
+  OPTcrossref =  {},
+  OPTkey = 	 {},
+  booktitle = {Astrodynamics Specialist Conference},
+  OPTpages = 	 {},
+  year = 	 {2006},
+  OPTeditor = 	 {},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  address = 	 {Keystone, Colorado},
+  month = 	 {August},
+  OPTorganization = {},
+  publisher = {AIAA Paper Number 2006-6286},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@BOOK{Betts3,
+  AUTHOR =       {Betts, J.~T.},
+  title =        {Practical Methods for Optimal Control and Estimation Using Nonlinear Programming},
+  PUBLISHER =    {SIAM Press},
+  ADDRESS =      {Philadelphia},
+  YEAR =         {2009},
+  PAGES = {247--253}
+}
+
+@ARTICLE{Mader1,
+  AUTHOR =       {Charles A.~Mader and Joaquim R.~R.~Martins and Juan J.~Alonso and Edwin van del Weide},
+  TITLE =        {ADjoint:  An Approach for the Rapid Development of Discrete {AD}joint Solvers},
+  JOURNAL =      {AIAA Journal},
+  YEAR =         {2008},
+  volume =       {46},
+  number =       {4},
+  pages =        {863--873},
+  month =        {April},
+}
+
+@ARTICLE{Thomas1,
+  AUTHOR =       {Jeffrey P.~Thomas and Earl H.~Dowell and Kenneth C.~Hall},
+  TITLE =        {Using Automatic Differentiation to Create a Nonlinear Reduced-Order-Model Aerodynamic Solver},
+  JOURNAL =      {AIAA Journal},
+  YEAR =         2010,
+  volume =       48,
+  number =       1,
+  pages  =       {19--24},
+  month  =       {January},  
+}
+
+@ARTICLE{Turner1,
+  AUTHOR =       {James D.~Turner},
+  TITLE =        {Automated Generation of Higher-Order Partial Derivative Models},
+  JOURNAL =      {AIAA Journal},
+  YEAR =         {2003},
+  volume =       {41},
+  number =       {8},
+  pages  =       {1590--1598},
+  month  =       {August},
+}
+
+@ARTICLE{Wen1,
+  AUTHOR =       {Hao Wen and Dongping Jin and Haiyan Yu}, 
+  TITLE =        {Infinite-Horizon Control for Retrieving a Tethered Subsatellite via an Elastic Tether},
+  JOURNAL =      {Journal of Guidance, Control, and Dynamics},
+  YEAR =         {2008},
+  volume =       {31},
+  number =       {4},
+  pages =        {899--906},
+}
+
+@article{Gill1,
+  TITLE =        {{SNOPT}: An {SQP} Algorithm for Large-Scale Constrained Optimization},
+  author =       {P.~E.~Gill and W.~Murray and M.~A.~Saunders},
+  JOURNAL =      {SIAM Review},
+  month =        {January},
+  volume  =      {47},
+  number =       {1},
+  pages  =       {99--131},
+  year =         {2002},
+}
+
+
+@MANUAL{Gill2,
+  TITLE =        {User's Guide for {SNOPT} Version 7: Software for Large Scale Nonlinear Programming},
+  author =       {Philip E. Gill and Walter Murray and Michael A. Saunders},
+  organization = {Stanford University and University of California, San Diego},  
+  month =        {June}, 
+  year =         {2008},
+}
+
+@ARTICLE{Biegler1,
+  AUTHOR =       {L.~T.~Biegler and V.~M.~Zavala},
+  TITLE =        {Large-Scale Nonlinear Programming Using {IPOPT}:  An Integrating Framework for Enterprise-Wide Optimization},
+  JOURNAL =      {Computers and Chemical Engineering},
+  YEAR =         {2008},
+  volume =       {33},
+  number =       {3},
+  month =        {March},
+  pages =        {575--582},
+}
+
+@ARTICLE{Biegler2,
+  AUTHOR =       {A.~Waechter and L.~T.~Biegler},
+  TITLE =        {On the Implementation of a Primal-Dual Interior-Point Filter Line Search Algorithm for Large-Scale Nonlinear Programming}, 
+  JOURNAL =      {Mathematical Programming},
+  YEAR =         {2006},
+  volume =       {106},
+  number =       {1},
+  month =        {March},
+  pages =        {575--582},
+}
+
+@InCollection{Rump1,
+  author = 	 {S.~M.~Rump},
+  title = 	 {INTLAB -- {INTerval LABoratory}},
+  booktitle = 	 {Developments in Reliable Computing},
+  OPTcrossref =  {},
+  OPTkey = 	 {},
+  pages = 	 {77--104},
+  publisher =    {Kluwer Academic Publishers},
+  year = 	 {1999},
+  editor = 	 {Tibor Csendes},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  OPTtype = 	 {},
+  OPTchapter = 	 {},
+  address = 	 {Dordrecht, Germany},
+  OPTedition = 	 {},
+  OPTmonth = 	 {},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@ARTICLE{Bischof1997AAE,
+       author = "Christian H. Bischof and Lucas Roh and Andrew Mauer",
+       title = "{ADIC} --- {An} Extensible Automatic Differentiation Tool for {ANSI-C}",
+       journal = "Software--Practice and Experience",
+       pages = "1427--1456",
+       url = "http://www-fp.mcs.anl.gov/division/software",
+       key = "Bischof1997AAE",
+       comment = "Also appeared as ANL/MCS-P626-1196 and CRCP-TR97676-S",
+       referred = "[Abate2002IAw], [Dignath2002AAa], [Keyes2002UAD], [Lee2002SAU], [Mancini2002APH],
+         [Tijskens2002EOO].",
+       year = "1997",
+       volume = "27",
+       number = "12",
+       ad_tools = "ADIC",
+       doi = "10.1002/(SICI)1097-024X(199712)27:12<1427::AID-SPE138>3.0.CO;2-Q"
+} 
+
+@ARTICLE{
+         Utke2008OAM,
+       author = "Jean Utke and Uwe Naumann and Mike Fagan and Nathan Tallent and Michelle Strout and
+         Patrick Heimbach and Chris Hill and Carl Wunsch",
+       title = "Open{AD/F}: A Modular, Open-Source Tool for Automatic Differentiation of {Fortran}
+         Codes",
+       journal = "{ACM} Transactions on Mathematical Software",
+       volume = "34",
+       number = "4",
+       pages = "18:1--18:36",
+       year = "2008",
+       doi = "10.1145/1377596.1377598",
+       ad_tools = "OpenAD",
+       abstract = "The OpenAD/F tool allows the evaluation of derivatives of functions defined by a
+         Fortran program. The derivative evaluation is performed by a Fortran code resulting from the
+         analysis and transformation of the original program that defines the function of interest. OpenADF
+         has been designed with a particular emphasis on modularity, flexibility, and the use of open source
+         components. While the code transformation follows the basic principles of automatic differentiation,
+         the tool implements new algorithmic approaches at various levels, for example, for basic block
+         preaccumulation and call graph reversal. Unlike most other automatic differentiation tools, OpenAD/F
+         uses components provided by the OpenAD framework, which supports a comparatively easy extension of
+         the code transformations in a language-independent fashion. It uses code analysis results
+         implemented in the OpenAnalysis component. The interface to the language-independent transformation
+         engine is an XML-based format, specified through an XML schema. The implemented transformation
+         algorithms allow efficient derivative computations using locally optimized cross-country sequences
+         of vertex, edge, and face elimination steps. Specifically, for the generation of adjoint codes,
+         OpenAD/F supports various code reversal schemes with hierarchical checkpointing at the subroutine
+         level. As an example from geophysical fluid dynamics a nonlinear time-dependent scalable, yet
+         simple, barotropic ocean model is considered. OpenAD/F's reverse mode is applied to compute
+         sensitivities of some of the model's transport properties with respect to gridded fields such
+         as bottom topography as independent (control) variables."
+} 
+
+@ARTICLE{
+         Straka2005ATf,
+       title = "ADF95: Tool for automatic differentiation of a FORTRAN code designed for large numbers
+         of independent variables",
+       ad_area = "Computational Fluid Dynamics",
+       ad_tools = "ADF95",
+       ad_theotech = "Sparsity",
+       author = "Straka, C.~W.",
+       journal = "Computer Physics Communications",
+       year = "2005",
+       volume = "168",
+       issue = "2",
+       pages = "123-139",
+       url =
+         "http://www.sciencedirect.com/science/article/B6TJ5-4FPJB8G-9/2/8cf1359fcced56e7a3540bde496000a7",
+       doi = "doi:10.1016/j.cpc.2005.01.011"
+} 
+
+@Article{Shampine2007,
+  author =       "L. F. Shampine",
+  title =        "Accurate Numerical Derivatives in {Matlab}",
+  journal =      "{ACM} Transactions on Mathematical Software",
+  volume =       "33",
+  number =       "4",
+  month =        aug,
+  year =         "2007",
+  pages =        "26:1--26:17",
+  URL =          "http://doi.acm.org/10.1145/1268776.1268781",
+  abstract =     "Complex step differentiation (CSD) is a technique for computing very accurate 
+                 numerical derivatives in languages that support complex arithmetic. We describe 
+                 here the development of a CSD package in Matlab called PMAD. We have extended 
+                 work done in other languages for scalars to the arrays that are fundamental to 
+                 Matlab. This extension raises questions that we have been able to resolve in a 
+                 satisfactory way. Our goal has been to make it as easy as possible to compute 
+                 approximate Jacobians in Matlab that are all but exact. Although PMAD has a 
+                 fast option for the expert that implements CSD as in previous work, the default 
+                 is an object-oriented implementation that asks very little of the user.",
+}
+
+@article{Shampine20072,
+ author = {Shampine, L. F.},
+ title = {Accurate Numerical Derivatives in {MATLAB}},
+ journal = {ACM Transactions on Mathematical Software},
+ volume = {33},
+ number = {4},
+ year = {2007},
+ issn = {0098-3500},
+ pages = {26},
+ doi = {http://doi.acm.org/10.1145/1268776.1268781},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ }
+
+@Article{Stamatiadis2010,
+  author = 	 {S.~Stamatiadis and S.~C.~Farantos},
+  title = 	 {AUTO\_DERIV: Tool for Automatic Differentiation of a Fortran Code},
+  journal = 	 {Computer Physics Communications},
+  year = 	 {2010},
+  OPTkey = 	 {},
+  volume = 	 {181},
+  number = 	 {10},
+  pages = 	 {1818--1819},
+  month = 	 {October},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@article{Dobmann1995,
+ author = {Dobmann, M. and Liepelt, M. and Schittkowski, K.},
+ title  = {{Algorithm 746}: {PCOMP}: {A Fortran} Code for Automatic Differentiation},
+ journal = {ACM Transactions on Mathematical Software},
+ volume = {21},
+ number = {3},
+ year = {1995},
+ month = {July--September},
+ issn = {0098-3500},
+ pages = {233--266},
+ doi = {http://doi.acm.org/10.1145/210089.210091},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+ }
+
+@Article{Lantoine:2011:UMV,
+  author =       "Gregory Lantoine and Ryan P. Russell and Thierry Dargent",
+  title =        "Using Multicomplex Variables for Automatic
+                  Computation of High-Order Derivatives",
+  journal =      "{ACM} Transactions on Mathematical Software",
+  volume =       38,
+  number =       3,
+  pages =        "16:1--16:21",
+  url =          "http://doi.acm.org/10.1145/2168773.2168774",
+  month =        "July--September",
+  year =         2012,
+  accepted =     "6 June 2011",
+  abstract =     "
+                  The computations of the high-order partial derivatives in
+                  a given problem are often cumbersome or not accurate. To
+                  combat such shortcomings, a new method for calculating
+                  exact high-order sensitivities using multicomplex numbers
+                  is presented. Inspired by the recent complex step method
+                  that is only valid for first order sensitivities, the new
+                  multicomplex approach is valid to arbitrary order. The
+                  mathematical theory behind this approach is revealed, and
+                  an efficient procedure for the automatic implementation
+                  of the method is described. Several applications are
+                  presented to validate and demonstrate the accuracy and
+                  efficiency of the algorithm. The results are compared
+                  to conventional approaches such as finite differencing,
+                  the complex step method, and two separate automatic
+                  differentiation tools. The multicomplex method performs
+                  favorably in the preliminary comparisons and is therefore
+                  expected to be useful for a variety of algorithms that
+		  exploit higher order derivatives.",
+}
+
+@Article{Russell2010,
+  author = 	 {G.~Lantoine and R.~P.~Russell and T.~Dargent},
+  title = 	 {Using Multi-Complex Variables for Automatic Computation of High-Order Derivatives},
+  OPTcrossref =  {},
+  OPTkey = 	 {},
+  journal = {AAS/AIAA Spaceflight Mechanics Meeting},
+  OPTpages = 	 {},
+  year = 	 {2010},
+  OPTeditor = 	 {D.~Mortari and T.~Starchville and A.~Trask and J.~K.~Miller},
+  OPTvolume = 	 {\textrm{San Diego, California}},
+  number = 	 {San Diego, California, February 15--17},
+  OPTseries = 	 {},
+  OPTaddress = 	 {San Diego, California},
+  OPTmonth = 	 {February},
+  organization = {American Astronautical Society},
+  OPTpublisher = {Univelt Publishers},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@PhdThesis{Speelpenning1980,
+  author = 	 {B.~Speelpenning},
+  title = 	 {Compiling Fast Partial Derivatives of Functions Given by Algorithms},
+  school = 	 {University of Illinois at Urbana-Champaign},
+  year = 	 {1980},
+  OPTkey = 	 {},
+  OPTtype = 	 {},
+  OPTaddress = 	 {},
+  OPTmonth = 	 {},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@article{Patterson2011,
+  author =       {M.~A.~Patterson and A.~V.~Rao},
+  TITLE =        {Exploiting Sparsity in Direct Collocation Pseudospectral Methods for Solving Continuous-Time Optimal Control Problems},
+  JOURNAL =      {Journal of Spacecraft and Rockets,},
+  volume =       {49},
+  number =       {2},
+  month =        {March--April},
+  year    =      {2012},
+  pages =        {364--377},
+}
+
+@Article{Rao:2010:TOMS,
+  author =       "Anil V. Rao and David A. Benson and Christopher Darby,
+                  Michael A. Patterson and Camila  Francolin and 
+		  Ilyssa Sanders and Geoffrey T. Huntington ",
+  title =        "Algorithm 902:  {GPOPS}, {A} {MATLAB} Software for Solving
+                  Multiple-Phase Optimal Control Problems Using the 
+		  {Gauss} Pseudospectral Method",
+  journal =      "{ACM} Transactions on Mathematical Software",
+  volume =       "37",
+  number =       "2",
+  year = 	 "2010",
+  month =        "April--June",
+  pages =        "22:1--22:39",
+  URL =          "http://doi.acm.org/10.1145/1731022.1731032",
+  accepted =     "17 june 2009",
+  abstract =     "
+                 An algorithm is described to solve multiple-phase optimal
+                 control problems using a recently developed numerical
+                 method called the Gauss pseudospectral method. The
+                 algorithm is well-suited for use in modern vectorized
+                 programming languages such as FORTRAN 95 and MATLAB. The
+                 algorithm discretizes the cost functional and the
+                 differential-algebraic equations in each phase of the
+                 optimal control problem. The phases are then connected
+                 using linkage conditions on the state and time. A
+                 large-scale nonlinear programming problem (NLP) arises
+                 from the discretization and the significant features of
+                 the NLP are described in detail. A particular reusable
+                 MATLAB implementation of the algorithm, called GPOPS,
+                 is applied to three classical optimal control problems
+                 to demonstrate its utility. The algorithm described
+                 in this paper will provide researchers and engineers a
+                 useful software tool and a reference when it is desired
+                 to implement the Gauss pseudospectral method in other
+                 programming languages.",
+}
+
+@Manual{GPOPSManual,
+  TITLE =        {User's Manual for GPOPS Version 4.x:  A {MATLAB} Software for Solving Multiple-Phase Optimal Control Problems Using $hp$--Adaptive Pseudospectral Methods}, 
+  author =       {Anil V.~Rao and David A.~Benson and Christopher L.~Darby and Brendan Mahon and Camila Francolin and Michael A.~Patterson and Ilyssa Sanders and Geoffrey T.~Huntington},
+  OPTkey = 	 {},
+  organization = {http://www.gpops.org},
+  OPTaddress = 	 {http://www.gpops.org},
+  OPTedition = 	 {},
+  month = 	 {August},
+  year = 	 {2011},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@InProceedings{Zondervan84,
+  author = 	 {K.~P.~Zondervan and T.~P.~Bauer and J.~T.~Betts and W.~P.~Huffman},
+  title = 	 {Solving the Optimal Control Problem Using a Nonlinear Programming Technique Part 3:  Optimal Shuttle Reentry Trajectories},
+  OPTcrossref =  {},
+  OPTkey = 	 {},
+  booktitle = {Proceedings of the AIAA/AA Astrodynamics Conference},
+  OPTpages = 	 {},
+  year = 	 {1984},
+  OPTeditor = 	 {},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  address = 	 {Seattle, Washington},
+  month = 	 {August},
+  organization = {AIAA Paper Number 84-2039},
+  OPTpublisher = {AIAA},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@book{MATLAB:2010,
+year = {2010},
+author = {Mathworks},
+title = {Version R2010b},
+publisher = {The MathWorks Inc.},
+address = {Natick, Massachusetts}
+}
+
+@incollection {Padulo2008,
+   author = {M.~Padulo and S.~A.~Forth and and M.~D.~Guenov},
+   affiliation = {Cranfleld University Engineering Design Group, Aerospace Engineering Department, School of Engineering Bedfordshire MK43 0AL UK},
+   title = {Robust Aircraft Conceptual Design Using Automatic Differentiation in Matlab},
+   booktitle = {Advances in Automatic Differentiation},
+   series = {Lecture Notes in Computational Science and Engineering},
+   editor = {Bischof, Christian H. and Bücker, H. Martin and Hovland, Paul and Naumann, Uwe and Utke, Jean and Barth, Timothy J. and Griebel, Michael and Keyes, David E. and Nieminen, Risto M. and Roose, Dirk and Schlick, Tamar},
+   publisher = {Springer}, 
+   address = {Berlin, Heidelberg},
+   isbn = {978-3-540-68942-3},
+   keyword = {Mathematics and Statistics},
+   pages = {271-280},
+   volume = {64},
+   year = {2008}
+}
+
+@InBook{Padulo20082,
+  author = 	 {M.~Padulo and S.~A.~Forth and M.~D.~Guenov},
+  title = 	 {Robust Aircraft Conceptual Design Using Automatic Differentiation in Matlab, {\em In} Advances in Automatic Differentiation, {\em P.~D.~Hovland, U.~Naumann, and J.~Utke, eds.}},
+  publisher = 	 {Springer},
+  year = 	 {2008},
+  OPTkey = 	 {},
+  volume = 	 {64},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  pages     =    {271--280},
+  OPTedition = 	 {},
+  OPTmonth = 	 {},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+
+@inproceedings{Tadjouddine2002,
+ author = {Tadjouddine, Mohamed and Forth, Shaun A. and Pryce, J. D. and Reid, J. K.},
+ title = {Performance Issues for Vertex Elimination Methods in Computing Jacobians Using Automatic Differentiation},
+ booktitle = {Proceedings of the International Conference on Computational Science-Part II},
+ series = {ICCS '02},
+ year = {2002},
+ isbn = {3-540-43593-X},
+ pages = {1077--1086},
+ numpages = {10},
+ acmid = {655479},
+ publisher = {Springer-Verlag},
+ address = {London, UK},
+}
+
+@INPROCEEDINGS{
+         Bischof2002CST,
+       author = "Christian H.~Bischof and H. Martin B{\"u}cker and Bruno Lang and A. Rasch
+         and Andre Vehreschild",
+       title = "Combining Source Transformation and Operator Overloading Techniques to Compute
+         Derivatives for {MATLAB} Programs",
+       booktitle = "Proceedings of the Second {IEEE} International Workshop on Source Code Analysis
+         and Manipulation ({SCAM} 2002)",
+       pages = "65--72",
+       doi = "10.1109/SCAM.2002.1134106",
+       address = "Los Alamitos, CA, USA",
+       publisher = "IEEE Computer Society",
+       abstract = "Derivatives of mathematical functions play a key role in various areas of numerical
+         and technical computing. MATLAB is a popular environmen t for technical computing providing
+         engineers and scientists with capabilities fo r mathematical computing, analysis, visualization, and
+         algorithmic development. For functions written in the MATLAB language, a novel software tool is
+         proposed to automatically transform a given MATLAB program into another MATLA B program capable of
+         computing not only the original function but also user -specified derivatives of that function. That
+         is, a program transformation k nown as automatic differentiation is performed to change the
+         semantics of a program in a fashion based on the chain rule of differential calculus. Th e crucial
+         ingredient of the tool is a combination of source-to-source trans formation and operator
+         overloading. The overall design of the tool is described and numerical experiments are reported
+         demonstrating the efficiency of the resu lting code for a sample problem.",
+       year = "2002",
+       ad_tools = "ADiMat"
+} 
+
+
+@InCollection{Kharche2006,
+  author = 	 {R.~V.~Kharche and S.~A.~Forth},
+  title = 	 {Source Transformation for {\sc MATLAB} Automatic Differentiation},
+  booktitle = 	 {Computational Science -- ICCS, Lecture Notes in Computer Science},
+  OPTcrossref =  {},
+  OPTkey = 	 {},
+  pages = 	 {558--565},
+  publisher = {Springer},
+  year = 	 {2006},
+  editor = 	 {V.~N.~Alexandrov and G.~D.~van~Albada and P.~M.~A.~Sloot and J.~Dongarra},
+  volume = 	 {3994},
+  OPTnumber = 	 {},
+  OPTseries = 	 {},
+  OPTtype = 	 {},
+  OPTchapter = 	 {},
+  address = 	 {Heidelberg, Germany},
+  OPTedition = 	 {},
+  OPTmonth = 	 {},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@article{Neidinger2010,
+Author = {Richard D.~Neidinger},
+Title = {{Introduction to Automatic Differentiation and MATLAB Object-Oriented Programming}},
+Journal = {{SIAM REVIEW}},
+Year = {{2010}},
+Volume = {{52}},
+Number = {{3}},
+Pages = {{545-563}},
+Abstract = {{An introduction to both automatic differentiation and object-oriented
+   programming can enrich a numerical analysis course that typically
+   incorporates numerical differentiation and basic MATLAB computation.
+   Automatic differentiation consists of exact algorithms on floating-point
+   arguments. This implementation overloads standard elementary operators
+   and functions in MATLAB with a derivative rule in addition to the
+   function value; for example, sin u will also compute (cos u) {*} u', w
+   here u and u' are numerical values. These methods are mostly one-line
+   programs that operate on a class of value-and-derivative objects,
+   providing a simple example of object-oriented programming in MATLAB
+   using the new(as of release 2008a) class definition structure. The
+   resulting powerful tool computes derivative values and multivariable
+   gradients, and is applied to Newton's method for root-finding in both
+   single and multivariable settings. To compute higher-order derivatives
+   of a single-variable function, another class of series objects keeps
+   Taylor polynomial coefficients up to some order. Overloading
+   multiplication on series objects is a combination (discrete convolution)
+   of coefficients. This idea leads to algorithms for other operations and
+   functions on series objects. A survey of more advanced topics in
+   automatic differentiation includes an introduction to the reverse mode
+   (our implementation is forward mode) and considerations in
+   arbitrary-order multivariable series computation.}},
+Publisher = {{SIAM PUBLICATIONS}},
+Address = {{3600 UNIV CITY SCIENCE CENTER, PHILADELPHIA, PA 19104-2688 USA}},
+Type = {{Article}},
+Language = {{English}},
+Affiliation = {{Neidinger, RD (Reprint Author), Davidson Coll, Dept Math, Davidson, NC 28035 USA.
+   Davidson Coll, Dept Math, Davidson, NC 28035 USA.}},
+DOI = {{10.1137/080743627}},
+ISSN = {{0036-1445}},
+Keywords = {{automatic differentiation; MATLAB; object-oriented programming; OOP;
+   numerical analysis; computational differentiation; algorithmic
+   differentiation; evaluating derivatives}},
+Keywords-Plus = {{TAYLOR-SERIES; EFFICIENT}},
+}
+
+
+@PhdThesis{Kharche2011,
+  author = 	 {R.~V.~Kharche},
+  title = 	 {MATLAB Automatic Differentiation using Source Transformation},
+  school = 	 {Department of Informatics, Systems Engineering, Applied Mathematics, and Scientific Computing, Cranfield University},
+  year = 	 {2011},
+  OPTkey = 	 {},
+  OPTtype = 	 {},
+  OPTaddress = 	 {},
+  month = 	 {August},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+
+@Manual{ADMAT-Manual,
+  title = 	 {ADMAT:  Automatic Differentiation Toolbox User's Guide, Version 2.0},
+  OPTkey = 	 {},
+  OPTauthor = 	 {Cayuga~Research},
+  organization = {{\sc Cayuga~Research}},
+  OPTaddress = 	 {},
+  OPTedition = 	 {},
+  OPTmonth = 	 {},
+  year = 	 {2008--2009},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@ARTICLE{Rao3,
+  AUTHOR =       {Anil V. Rao and Kenneth D. Mease},
+  TITLE =        {Dichotomic Basis Approach to solving Hyper-Sensitive Optimal Control Problems},
+  JOURNAL =      {Automatica},
+  YEAR =         {1999},
+  volume =       {35},
+  number =       {4},
+  month  =       {April},
+  pages =        {633--642},
+}
+
+@ARTICLE{Rao4,
+  AUTHOR =       {Anil V. Rao and Kenneth D. Mease},
+  TITLE =        {Eigenvector Approximate Dichotomic Basis Method for Solving Hyper-Sensitive optimal Control Problems},
+  JOURNAL =      {Optimal Control Applications and Methods},
+  YEAR =         {2000},
+  volume =       {21},
+  number =       {1},
+  month  =       {January--February},
+  pages =        {1-19},
+}
+
+@Article{Rao5,
+  TITLE =        {Application of a Dichotomic Basis Method to Performance Optimization of Supersonic Aircraft},
+  author =       {Anil V.~Rao},
+  Journal =      {Journal of Guidance, Control, and Dynamics},
+  Volume =       {23},
+  Number =       {3},
+  month   =      {May--June},
+  YEAR =         {2000},
+  pages =        {570--573},
+}
+
+@ARTICLE{Rao6,
+  AUTHOR =       {Anil V.~Rao},
+  TITLE =        {Riccati Dichotomic Basis Method for solving Hyper-Sensitive optimal Control Problems},
+  JOURNAL =      {Journal of Guidance, Control, and Dynamics},
+  YEAR =         {2003},
+  volume =       {26},
+  number =       {1},
+  month  =       {January--February},
+  pages =        {185--189},
+}
+
+@Article{Ledzewicz2008a,
+  author = 	 {U.~Ledzewicz and H.~Sch\"{a}ttler},
+  title = 	 {Analysis of Optimal Controls for a Mathematical Model of Tumour Anti-Angiogenesis},
+  journal = 	 {Optimal Control Applications and Methods},
+  year = 	 {2008},
+  OPTkey = 	 {},
+  volume = 	 {29},
+  number = 	 {1},
+  pages = 	 {41--57},
+  month = 	 {January--February},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@ARTICLE{Zhao2,
+  AUTHOR =       {Yiyuan J. Zhao},
+  TITLE =        {Optimal Pattern of Glider Dynamic Soaring},
+  JOURNAL =      {Optimal Control Applications and Methods},
+  YEAR =         {2004},
+  volume =       {25},
+  pages =        {67--89},
+}
+
+@Article{Jung02,
+  author = 	 {E.~Jung and S.~Lenhart and Z.~Feng},
+  title = 	 {Optimal Control of Treatments in a Two-Strain Tuberculosis Model},
+  journal = 	 {Discrete and Continuous Dynamical Systems -- Series B},
+  year = 	 {2002},
+  OPTkey = 	 {},
+  volume = 	 {2},
+  pages = 	 {479--482},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@article{Weinstein2014,
+ author = {M.~J.~Weinstein and A.~V.~Rao},
+ title = {A Source Transformation via Operator Overloading Method for the Automatic Differentiation of Mathematical Functions in MATLAB},
+ journal = {ACM Transactions on Mathematical Software},
+ month = {in Revision, April},
+ year = {2014.  Current manuscript available at http://vdol.mae.ufl.edu/SubmittedJournalPublications/gatorad-TOMS-November-2013.pdf},
+
+} 
+
+@Article{Patterson2015,
+  author = 	 {M.~A.~Patterson and W.~W.~Hager and A.~V.~Rao},
+  title = 	 {A $ph$ Mesh Refinement Method for Optimal Control},
+  journal = 	 {Optimal Control Applications and Methods},
+  year = 	 {2015},
+  OPTkey = 	 {},
+  volume = 	 {36},
+  number = 	 {4},
+  pages = 	 {398 -- 421},
+  month = 	 {July--August},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}
+
+@Article{LiuRao2015a,
+  author = 	 {F.~Liu and W.~W.~Hager and A.~V.~Rao},
+  title = 	 {Adaptive Mesh Refinement for Optimal Control Using Nonsmoothness Detection and Mesh Size Reduction},
+  journal = 	 {Journal of the Franklin Institute},
+  year = 	 {2015},
+  OPTkey = 	 {},
+  volume = 	 {352},
+  number = 	 {10},
+  pages = 	 {4081 -- 4106},
+  month = 	 {October},
+  OPTnote = 	 {},
+  OPTannote = 	 {},
+}
+
+@Article{LiuRao2015b,
+  author = 	 {F.~Liu and W.~W.~Hager and A.~V.~Rao},
+  title = 	 {Adaptive Mesh Refinement Method for Optimal Control Using Nonsmoothness Detection and Mesh Size Reduction},
+  journal = 	 {IEEE Transactions on Control Systems Technology},
+  year = 	 {2015},
+  OPTkey = 	 {},
+  OPTvolume = 	 {},
+  OPTnumber = 	 {},
+  pages = 	 {},
+  month = 	 {October},
+  OPTnote = 	 {},
+  OPTannote = 	 {}
+}

@@ -1,0 +1,71 @@
+function result = gpopsSolveRPMD(setup, probinfo, scalemethod)
+
+% gpopsSolveRPMD
+% this function solves the optimal control problem using the Radau
+% Pseudospectral Method using the mesh, derivative method, derivative
+% level, scaling method, and nonlinear program defined in the user setup
+
+% get full collocation points, weights and diff matrix for each phase
+if probinfo.displaylevel > 0;
+  disp('Computing Radau Points, Integration Weights, and Differentiation Matrix');
+end
+[probinfo.numnodes, probinfo.collocation] = gpopsPointsWeightsRPMD(setup.mesh.phase);
+
+% get NLP bounds and map
+if probinfo.displaylevel > 0;
+  disp('Creating Bounds For Nonlinear Program');
+end
+[ZL, ZU, FL, FU, probinfo] = gpopsBoundsRPMD(setup, probinfo);
+
+% get NLP Guess
+if probinfo.displaylevel > 0;
+  disp('Creating Guess For Nonlinear Program');
+end
+if probinfo.warmStartFlag && strcmp(setup.nlp.solver,'ipopt')
+  [ZG, zlG, zuG, FmulG] = gpopsGuessRPMD(setup, probinfo);
+elseif probinfo.warmStartFlag && strcmp(setup.nlp.solver,'snopt')
+  [ZG, ZmulG, FmulG, FstateG, ZstateG] = gpopsGuessRPMD(setup, probinfo);  
+else
+  ZG = gpopsGuessRPMD(setup, probinfo);
+end
+
+% get NLP scales
+if probinfo.displaylevel > 0;
+  disp('Computing Scales For Nonlinear Program');
+end
+[probinfo, ocpscales] = gpopsScaleRPMD(setup, probinfo, scalemethod);
+
+% call NLP
+if probinfo.displaylevel > 0;
+  disp(['Calling Nonlinear Program ', setup.nlp.solver]);
+end
+if strcmpi(setup.nlp.solver,'snopt');
+    if probinfo.warmStartFlag
+        result = gpopsSnoptHandlerRPMD(ZG, ZL, ZU, FL, FU, setup.name, setup.nlp.snoptoptions, probinfo, ZmulG, FmulG, FstateG, ZstateG);
+    else
+        result = gpopsSnoptHandlerRPMD(ZG, ZL, ZU, FL, FU, setup.name, setup.nlp.snoptoptions, probinfo);
+    end
+elseif strcmpi(setup.nlp.solver,'ipopt');
+  if probinfo.warmStartFlag
+    result = gpopsIpoptHandlerRPMD(ZG, ZL, ZU, FL, FU, setup.name, setup.nlp.ipoptoptions, probinfo, zlG, zuG, FmulG);
+  else
+    result = gpopsIpoptHandlerRPMD(ZG, ZL, ZU, FL, FU, setup.name, setup.nlp.ipoptoptions, probinfo);
+  end
+end
+
+% add scales and collocation to result structure
+if probinfo.scaleflag
+  result.ocpscales = ocpscales;
+end
+
+% store mesh properties
+numphase = probinfo.numphase;
+collocation(numphase).s = [];
+collocation(numphase).w = [];
+collocation(numphase).D = [];
+for phasecount = 1:probinfo.numphase;
+  collocation(phasecount).s = probinfo.collocation(phasecount).s;
+  collocation(phasecount).w = probinfo.collocation(phasecount).w;
+  collocation(phasecount).D = sortrows([probinfo.collocation(phasecount).Doffdiag; probinfo.collocation(phasecount).Ddiag]);
+end
+result.collocation = collocation;

@@ -1,0 +1,124 @@
+function [hesoutput,heslocs,grdoutput] = gpopsAdigatorEndpHesLoc(input,probinfo)
+% ADiGator wrapper for Endpoint Hessian Locations
+% Copyright 2011-2014 Matthew J. Weinstein and Anil V. Rao
+% Distributed under the GNU General Public License version 3.0
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Inputs                           %
+% ----------------------------------------------------------------------- %
+numphase = length(input.phase);
+for phasecount = 1:numphase
+  % State Endpoints
+  if isfield(input.phase(phasecount),'initialstate');
+    x0 = input.phase(phasecount).initialstate;
+    xf = input.phase(phasecount).finalstate;
+    input.phase(phasecount).initialstate = struct('f',x0,'dv',ones(length(x0),1));
+    input.phase(phasecount).finalstate   = struct('f',xf,'dv',ones(length(xf),1));
+  end
+  % Time Endpoints
+  t0 = input.phase(phasecount).initialtime;
+  tf = input.phase(phasecount).finaltime;
+  input.phase(phasecount).initialtime    = struct('f',t0,'dv',1);
+  input.phase(phasecount).finaltime      = struct('f',tf,'dv',1);
+  % Integral
+  if isfield(input.phase(phasecount),'integral')
+    q = input.phase(phasecount).integral;
+    input.phase(phasecount).integral     = struct('f',q, 'dv',ones(length(q),1));
+  end
+end
+
+% Parameter
+if isfield(input,'parameter')
+  par = input.parameter;
+  input.parameter = struct('f',par,'dv',ones(length(par),1));
+end
+
+% ----------------------------------------------------------------------- %
+%                          Call Derivative File                           %
+% ----------------------------------------------------------------------- %
+output = feval(probinfo.adigator.endphes,input);
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Outputs                          %
+% ----------------------------------------------------------------------- %
+grdflag = false;
+if nargout > 1
+  grdflag = true;
+end
+
+hesoutput  = struct('objectivehesloc',[]);
+heslocs    = struct('objectiveupper',[],'objectivelower',[]);
+if grdflag
+  grdoutput = struct('objectivegrdloc',[]);
+end
+% Objective
+objective = output.objective;
+if isfield(objective,'dvdv_location')
+  [hesoutput.objectivehesloc, heslocs.objectiveupper, ...
+    heslocs.objectivelower] = getUpperTri(objective.dvdv_location);
+  hesoutput.objectivehesloc = hesoutput.objectivehesloc(2:3,:);
+end
+if grdflag && isfield(objective,'dv_location')
+  grdoutput.objectivegrdloc = objective.dv_location.';
+end
+% Events
+if isfield(output,'eventgroup')
+  eventgrouphes = struct('eventhesloc',cell(size(output.eventgroup)));
+  eventgrouploc = struct('eventupper',cell(size(output.eventgroup)),...
+    'eventlower',cell(size(output.eventgroup)));
+  if grdflag
+    eventgroupgrd = struct('eventgrdloc',cell(size(output.eventgroup)));
+  end
+  for g = 1:numel(output.eventgroup)
+    event = output.eventgroup(g).event;
+    if isstruct(event)
+      if isfield(event,'dvdv_location')
+        [eventgrouphes(g).eventhesloc, eventgrouploc(g).eventupper, ...
+          eventgrouploc(g).eventlower] = getUpperTri(event.dvdv_location);
+      end
+      if grdflag && isfield(event,'dv_location')
+        if size(event.dv_location,2) == 1
+          event.dv_location = ...
+            [ones(size(event.dv_location,1),1), event.dv_location];
+        end
+        eventgroupgrd(g).eventgrdloc = event.dv_location.';
+      end
+    end
+    if isempty(eventgrouphes(g).eventhesloc)
+      eventgrouphes(g).eventhesloc = zeros(3,0);
+    end
+    if isempty(eventgroupgrd(g).eventgrdloc)
+      eventgroupgrd(g).eventgrdloc = zeros(2,0);
+    end
+  end
+  hesoutput.eventgroup = eventgrouphes;
+  heslocs.eventgroup   = eventgrouploc;
+  if grdflag
+    grdoutput.eventgroup = eventgroupgrd;
+  end
+end
+end
+
+function [loc,upperloc,lowerloc] = getUpperTri(loc)
+nd = size(loc,1);
+if size(loc,2) == 3
+  x1 = loc(:,2); x2 = loc(:,3);
+else
+  f = ones(nd,1); x1 = loc(:,1); x2 = loc(:,2);
+  loc = [f x1 x2];
+end
+
+upperloc = x2 > x1;
+lowerloc = x2 < x1;
+if any(any(loc(upperloc,:) ~= loc(lowerloc,[1 3 2])))
+  % need to sort these
+  loc2 = [(1:size(loc,1)).' loc];
+  upperloc = sortrows(loc2(upperloc,:),[4 3 2]);
+  lowerloc = sortrows(loc2(lowerloc,:),[3 4 2]);
+  upperloc = upperloc(:,1);
+  lowerloc = lowerloc(:,1);
+end
+loc(lowerloc,:) = [];
+
+loc = loc.';
+end

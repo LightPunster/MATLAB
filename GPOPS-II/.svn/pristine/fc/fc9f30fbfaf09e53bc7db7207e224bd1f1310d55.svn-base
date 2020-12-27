@@ -1,0 +1,491 @@
+function gpops2CreateLicense
+
+% gpops2CreateLicense
+% This function creates a gpops2 License file
+%
+% input 1 is the desired expiration date of the license
+% with the following format
+%
+% ExpirationDate = [year, month, day]
+% where year, month and day are all integer numbers
+%
+%
+% input 2 is a cell array of Matlab licenses that will be 
+% accepted by the license file with the following format
+%
+% MatlabLicenses = {'LicNum1', 'LicNum2', 'LicNum3', .... 'LicNumN'}
+% where each LicNum is a string, MatlabLicenses results in a
+% cell array of length N
+
+% filename of license
+licfilename = 'gpops2License.m'; %'gpops2License.m';
+
+% get current clock date
+CurrentDateInteger = floor(now);
+
+% prompt user for information about the license
+% information about who the license is for
+disp(' ');
+OwnerName = input('Enter the name of the owner of this GPOPS-II license: ','s');
+
+promptflag = true;
+while promptflag;
+  promptflag = false;
+  % license type
+  disp(' ');
+  disp('Enter the type of license');
+  LicType = input(['Enter 1 for Academic, \n'...
+    '2 for Not-for-Profit,\n'...
+    '3 for Commercial,\n'...
+    '4 United States Government: ']);
+  if LicType == 1;
+    LicTypeStr = 'Academic';
+  elseif LicType == 2;
+    LicTypeStr = 'Not-for-Profit';
+  elseif LicType == 3;
+    LicTypeStr = 'Commercial';
+  elseif LicType == 4;
+    LicTypeStr = 'United States Government';
+  else
+    disp(' ');
+    disp('Invalid input for license type, value must be 1, 2, 3, or 4');
+    promptflag = true;
+  end
+end
+
+promptflag = true;
+while promptflag;
+  promptflag = false;
+  % license type
+  disp(' ');
+  if LicType == 1;
+    disp('Enter the class of Academic license');
+    LicClass = input(['Enter 1 for Single-User, \n'...
+      '2 for Department-Wide, \n'...
+      '3 for University-Wide, \n'...
+      '4 for Single-User Trial, \n'...
+      '5 for Single-User Course: ']);
+    if LicClass == 1;
+      LicClassStr = 'Single-User';
+    elseif LicClass == 2;
+      LicClassStr = 'Department-Wide';
+    elseif LicClass == 3;
+      LicClassStr = 'University-Wide';
+    elseif LicClass == 4;
+      LicClassStr = 'Single-User Trial';
+    elseif LicClass == 5;
+      LicClassStr = 'Single-User Course';
+    else
+      disp(' ');
+      disp('Invalid input for license class, value must be 1, 2, 3 or 4');
+      promptflag = true;
+    end
+  elseif LicType == 2;
+    disp('Enter the class of Not-for-Profit license');
+    LicClass = input(['Enter 1 for Single-User, \n'...
+      '2 for Department-Wide, \n'...
+      '3 for Insitution-Wide, \n'...
+      '4 for Trial: ']);
+    if LicClass == 1;
+      LicClassStr = 'Single-User';
+    elseif LicClass == 2;
+      LicClassStr = 'Department-Wide';
+    elseif LicClass == 3;
+      LicClassStr = 'Institution-Wide';
+    elseif LicClass == 4;
+      LicClassStr = 'Trial License';
+    else
+      disp(' ');
+      disp('Invalid input for license class, value must be 1, 2, 3, or 4');
+      promptflag = true;
+    end
+  elseif LicType == 3;
+    disp('Enter the class of Commercial license');
+    LicClass = input(['Enter 1 for Single-User, \n'...
+      '2 for Department-Wide, \n'...
+      '3 for Company-Wide, \n'...
+      '4 for Trial: ']);
+    if LicClass == 1;
+      LicClassStr = 'Single-User';
+    elseif LicClass == 2;
+      LicClassStr = 'Department-Wide';
+    elseif LicClass == 3;
+      LicClassStr = 'Company-Wide';
+    elseif LicClass == 4;
+      LicClassStr = 'Trial License';
+    else
+      disp(' ');
+      disp('Invalid input for license class, value must be 1, 2, 3, or 4');
+      promptflag = true;
+    end
+  elseif LicType == 4;
+    disp('Enter the class of United States Government license');
+    LicClass = input(['Enter 1 for Single-User, \n'...
+      '2 for Department-Wide: ']);
+    if LicClass == 1;
+      LicClassStr = 'Single-User';
+    elseif LicClass == 2;
+      LicClassStr = 'Department-Wide';
+    else
+      disp(' ');
+      disp('Invalid input for license class, value must be 1 or 2');
+      promptflag = true;
+    end
+  end
+end
+
+% Set Expiration Date
+% method 1, ExpirationDate will be either current date + 30 days, or
+%           current date + 1 year
+% method 2, Ask user to give ExpirationDate
+promptflag = true;
+while promptflag;
+  promptflag = false;
+  % license type
+  disp(' ');
+  disp('Set Expiration Date option of license');
+  DateType = input(['Enter 1 for current date + 30 days (Trial License), \n'...
+    '2 for current date + 1 year (Annual License),\n'...
+    '3 to provide expiration date: ']);
+  if DateType == 1;
+    ExpirationDate = datevec(CurrentDateInteger + 30);
+    ExpirationDate = ExpirationDate(1:3);
+    ExpirationDateInteger = datenum(ExpirationDate);
+  elseif DateType == 2;
+    ExpirationDate = datevec(CurrentDateInteger + 365);
+    ExpirationDate = ExpirationDate(1:3);
+    ExpirationDateInteger = datenum(ExpirationDate);
+  elseif DateType == 3;
+    % prompt user for ExpirationDate
+    % runs until acceptable response is given
+    promptflag = true;
+    while promptflag;
+      promptflag = false;
+      disp(' ');
+      ExpirationDate = input(['Enter the Expiration Date of the GPOPS-II license \n' ...
+        '   input a 1x3 array of numbers of the form \n'...
+        '   ExpirationDate = [year, month, day] \n'...
+        '   ExpirationDate = ']);
+      if ~isnumeric(ExpirationDate);
+        disp(' ');
+        disp('Invalid input for ExpirationDate, ');
+        disp('input must be a 1x3 array of numbers entered as [year, month, day]');
+        promptflag = true;
+      elseif (size(ExpirationDate,2) ~= 3) || (size(ExpirationDate,1) ~= 1);
+        disp(' ');
+        disp('Invalid size for ExpirationDate, ');
+        disp('input must be a 1x3 array of numbers entered as [year, month, day]');
+        promptflag = true;
+      elseif any(floor(ExpirationDate) ~= ceil(ExpirationDate));
+        disp(' ');
+        disp('Invalid input ExpirationDate, ');
+        disp('year, month, and day must all be integer values');
+        disp(['you entered : [',num2str(ExpirationDate(1)),', ',num2str(ExpirationDate(2)),', ',num2str(ExpirationDate(3)),']']);
+        promptflag = true;
+      else
+        ExpirationDateInteger = datenum(ExpirationDate);
+        if ExpirationDateInteger < CurrentDateInteger;
+          disp(' ');
+          disp('Invalid date for ExpirationDate (date has already past), ');
+          disp(['you entered : [',num2str(ExpirationDate(1)),', ',num2str(ExpirationDate(2)),', ',num2str(ExpirationDate(3)),']']);
+          promptflag = true;
+        elseif ExpirationDateInteger == CurrentDateInteger;
+          disp(' ');
+          disp('Warning, you entered current date.');
+          disp(' ');
+          reply = input('Are you sure you want to use current date? Y/N [Y]:','s');
+          if isempty(reply)
+            reply = 'Y';
+          end
+          if ~strcmpi(reply,'y');
+            promptflag = true;
+          end
+        end
+      end
+    end
+  else
+    disp(' ');
+    disp('Invalid input for Expiration Date option, value must be 1, 2 or 3');
+    promptflag = true;
+  end
+end
+
+% prompt user for matlab license inputs
+promptflag = true;
+while promptflag;
+  promptflag = false;
+  disp(' ');
+  MatlabLicenses = input(['Enter the acceptable MATLAB license(s) for the GPOPS-II license \n'...
+    '   MatlabLicenses is a 1xN cell array of strings containing the N Matlab \n'...
+    '   license numbers that the GPOPS-II license file will accept'...
+    '   where each LicNum is a string, \n'...
+    '   MatlabLicenses = {''LicNum1'', ''LicNum2'', .... ''LicNumN''} \n'...
+    '   MatlabLicenses = ']);
+  if ~isa(MatlabLicenses, 'cell');
+    disp(' ');
+    disp('Incorrect input type for MatlabLicenses.');
+    disp('Input must be a 1xN cell array.');
+    promptflag = true;
+  elseif size(MatlabLicenses,1) ~= 1;
+    disp(' ');
+    disp('Incorrect input type for MatlabLicenses.');
+    disp('Input must be a 1xN cell array.');
+    promptflag = true;
+  elseif size(MatlabLicenses,2) < 1;
+    disp(' ');
+    disp('Incorrect input type for MatlabLicenses.');
+    disp('Input must be a 1xN cell array, where N > 1.');
+    promptflag = true;
+  else
+    for MLcount = 1:size(MatlabLicenses,2);
+      if ~isa(MatlabLicenses{MLcount}, 'char');
+        disp(' ');
+        disp('Incorrect input type for MatlabLicenses.');
+        disp(['   Input for MatlabLicenses{',num2str(MLcount),'} is not a string.']);
+        promptflag = true;
+      end
+    end
+  end
+end
+
+% START MAKING GPOPS-II License file here ---------------------------------
+% open gpops2LicenseTest.m for printing
+fid = fopen(licfilename,'w+');
+
+% print fuction header
+% p1p2 is the output
+% p1, p2, licIn are inputs,
+fprintf(fid,'function varargout = gpops2License(varargin)\n');
+
+% Logic to make sure the lisence file has the proper inputs of the proper
+% classes
+% get size of inputs and outputs
+fprintf(fid,'NUMin = nargin;\n');
+fprintf(fid,'NUMout = nargout;\n');
+
+% Print code to check for proper input and output information ... resulting
+% code is
+%
+% NUMin = nargin;
+% NUMout = nargout;
+% if NUMin == 0;
+%   if NUMout == 0;
+%   else
+%     error('Too many output arguments.');
+%   end
+% elseif (NUMin == 2) && (NUMout == 2);
+%   if (isa(varargin{1},'char') && isa(varargin{2},'char'));
+%     if (numel(varargin{1}) ~= 6);
+%       error('Too many output arguments.');
+%     end
+%     if ~strcmp(varargin{2},license);
+%       error('Too many input arguments.');
+%     end
+%   else
+%     error('Too many input arguments.');
+%   end
+% else
+%   error('Too many input arguments.');
+% end
+%
+% NOTE: an error of (too many input arguments) is given for all input
+% mismatch cases in order to distract from  license tampering
+%
+% if the license file is called with no inputs or outputs it will display
+% information about the license (see display license information here)
+%
+% if no inputs are given, and any number of outputs is used, an error is
+% given (Too many output arguments)
+%
+% if the license file is called with anything other then 2 inputs and 2
+% output, an error is given (Too many input arguments)
+%
+% if the 2 inputs are not of specific classes (input1 is a char string,
+% input2 is a char string) an error is given (Too many input arguments)
+%
+% if input1 is not a string of 6 characters an error is given (Too many
+% input arguments)
+% 
+% if input2 is not the same as the matlab license (strcmp(in3, license))
+% an error is given (Too many input arguments)
+fprintf(fid,'if NUMin == 0;\n');
+fprintf(fid,'  if NUMout == 0;\n');
+    % display license information
+fprintf(fid,'    disp('' '');\n');
+fprintf(fid,'    disp(''   GPOPS-II License Information'');\n');
+fprintf(fid,'    disp('' '');\n');
+fprintf(fid,['    disp(''   License Owner  : ',OwnerName,''');\n']);
+fprintf(fid,['    disp(''   License Type   : ',LicTypeStr,''');\n']);
+fprintf(fid,['    disp(''   License Class  : ',LicClassStr,''');\n']);
+fprintf(fid,'    disp('' '');\n');
+fprintf(fid,['    disp(''   License Expiration Date [year, month, day]        : [',num2str(ExpirationDate(1)),', ',num2str(ExpirationDate(2)),', ',num2str(ExpirationDate(3)),']'');\n']);
+fprintf(fid,['    disp(''   License Valid For The Following MATLAB license(s) : ',MatlabLicenses{1},''');\n']);
+for MLcount = 2:size(MatlabLicenses,2);
+fprintf(fid,['    disp(''                                                     : ',MatlabLicenses{MLcount},''');\n']);
+end
+fprintf(fid,'    return\n');
+
+fprintf(fid,'  else\n');
+fprintf(fid,'    error(''Too many output arguments.'');\n');
+fprintf(fid,'  end\n');
+fprintf(fid,'elseif (NUMin == 2) && (NUMout == 2);\n');
+fprintf(fid,'  if (isa(varargin{1},''char'') && isa(varargin{2},''char''));\n');
+fprintf(fid,'    if (numel(varargin{1}) ~= 6);\n');
+fprintf(fid,'      error(''Too many output arguments.'');\n');
+fprintf(fid,'    end\n');
+fprintf(fid,'    if ~strcmp(varargin{2},license);\n');
+fprintf(fid,'      error(''Too many input arguments.'');\n');
+fprintf(fid,'    end\n');
+fprintf(fid,'  else\n');
+fprintf(fid,'    error(''Too many input arguments.'');\n');
+fprintf(fid,'  end\n');
+fprintf(fid,'else\n');
+fprintf(fid,'  error(''Too many input arguments.'');\n');
+fprintf(fid,'end\n');
+
+% Print expiration date verification to file ... resulting code is
+%
+% clockCurr = clock;
+% if ExpirationDateInteger <= datenummx(clockCurr(1:3));
+%   error('GPOPS-II license file has expired.');
+% end
+%
+% this section of code will check the license expiration date against the
+% current system clock, if the date on the system clock is past the
+% expiration date an error is given (GPOPS-II license file has expired.)
+fprintf(fid,'clockCurr = clock;\n');
+fprintf(fid,['if ',num2str(ExpirationDateInteger),' <= datenummx(clockCurr(1:3));\n']);
+fprintf(fid,'  error(''GPOPS-II license file has expired.'');\n');
+fprintf(fid,'end;\n');
+
+% Print MATLAB license verification to file ... resulting code is
+%
+% MatlabLicenses = {'Lic1', 'Lic2',..., 'LicN'};
+% if ~any(strcmp(MatlabLicenses,varargin{2}));
+%   error('GPOPS-II license file NOT valid for this matlab license.');
+% end
+%
+% this section of code will check the MATLAB license against the acceptable
+% MATLAB license(s), if the current MATLAB license is not in the cell array
+% MatlabLicenses an error is given (GPOPS-II license file NOT valid for
+% this matlab license.)
+fprintf(fid,'MatlabLicenses = {');
+fprintf(fid,['''',MatlabLicenses{1},'''']);
+for MLcount = 2:size(MatlabLicenses,2);
+  fprintf(fid,[', ''',MatlabLicenses{MLcount},'''']);
+end
+fprintf(fid,'};\n');
+fprintf(fid,'if ~any(strcmp(MatlabLicenses,varargin{2}));\n');
+fprintf(fid,'  error(''GPOPS-II license file NOT valid for this matlab license.'');\n');
+fprintf(fid,'end\n');
+
+
+% License security check
+fprintf(fid,'switch varargin{1};\n');
+fprintf(fid,'  case ''Ja0Wec'';\n');
+fprintf(fid,'    strindex = [8 2 3 7 10 13 11 19 16 20];\n');
+fprintf(fid,'  case ''h3DxFq'';\n');
+fprintf(fid,'    strindex = [5 6 1 4 9 14 12 18 15 17];\n');
+fprintf(fid,'  case ''9vLpNk'';\n');
+fprintf(fid,'    strindex = [7 2 4 6 10 14 11 18 16 20];\n');
+fprintf(fid,'  case ''KiDl4f'';\n');
+fprintf(fid,'    strindex = [3 4 6 8 13 9 12 15 19 17];\n');
+fprintf(fid,'end\n');
+
+fprintf(fid,'ranNum = clock;\n');
+fprintf(fid,'ranNum = 10000.*ranNum(6);\n');
+fprintf(fid,'ranNum = round(10*(ranNum - floor(ranNum)));\n');
+
+fprintf(fid,'switch ranNum;\n');
+fprintf(fid,'  case {0, 1, 2};\n');
+fprintf(fid,'    strBI = ''zw2XAsz1'';\n');
+fprintf(fid,'    strindex = strindex([9 1 6 2 8 5 4 3 10 7]);\n');
+fprintf(fid,'    numOut = int64(19262767);\n');
+fprintf(fid,'  case {3, 4};\n');
+fprintf(fid,'    strBI = ''d46GrBE3'';\n');
+fprintf(fid,'    strindex = strindex([8 2 4 7 10 3 5 1 6 9]);\n');
+fprintf(fid,'    numOut = int64(12834781);\n');
+fprintf(fid,'  case {5, 6, 7};\n');
+fprintf(fid,'    strBI = ''M86P0jUo'';\n');
+fprintf(fid,'    strindex = strindex([3 1 2 4 7 6 8 9 5 10]);\n');
+fprintf(fid,'    numOut = int64(15808409);\n');
+fprintf(fid,'  case {8, 9, 10};\n');
+fprintf(fid,'    strBI = ''n57Ht6Vb'';\n');
+fprintf(fid,'    strindex = strindex([6 8 3 2 1 10 7 4 9 5]);\n');
+fprintf(fid,'    numOut = int64(13734047);\n');
+fprintf(fid,'end\n');
+
+fprintf(fid,'strOut = [strBI, varargin{1}, ''Zy1QRg''];\n');
+
+fprintf(fid,'varargout{1} = strOut(strindex);\n');
+fprintf(fid,'varargout{2} = numOut;\n');
+
+% close file
+fclose(fid);
+
+% convert license file to MATLAB pcode
+pcode(licfilename)
+
+% delete m file
+delete gpops2License.m
+% End of license creater
+% -------------------------------------------------------------------------
+
+
+
+% The following code needs to be added to the GPOPS-II code to call the
+% license file
+% 
+% Copy paste it as is... when implimenting the license file
+%{
+
+% GPOPS-II license verification -------------------------------------------
+if ~isequal(exist('gpops2License', 'file'),6),
+  error('No valid GPOPS-II license file found.');
+end
+ranNum = clock;
+ranNum = 10000.*ranNum(6);
+ranNum = round(10*(ranNum - floor(ranNum)));
+switch ranNum;
+  case {0, 1, 2};
+    strIn = 'Ja0Wec';
+  case {3, 4, 5};
+    strIn = 'h3DxFq';
+  case {6, 7};
+    strIn = '9vLpNk';
+  case {8, 9, 10};
+    strIn = 'KiDl4f';
+end
+clear ranNum
+[strOut, numOut] = gpops2License(strIn, license);
+clear strIn
+if isa(numOut, 'int64') && numOut ~= int64(21348307),
+  switch strOut;
+    case {'y1ewRaz2g0', 'ZAqsQhXz1x', 'yzkwQvsXgL', 'R2KXZ41s1l'};
+      if rem(int64(411227463585469),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    case {'R4E0g6a3ey', 'QBGx1dhrqZ', 'Q4BLgGvEky', 'ZG3l1B46KR'};
+      if rem(int64(274000845065767),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    case {'6o8U0eRyag', 'M0jPxqQZh1', 'PU8jLkQyvg', 'j6PolKZR41'};
+      if rem(int64(337482768513563),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    case {'eR75bg0Vya', 'qQn6t1xHZh', 'kQH5VgL6yv', 'KZ6H71lbR4'};
+      if rem(int64(293198651708429),numOut) ~= 0;
+        error('Invalid GPOPS-II License');
+      end
+    otherwise
+      %delete('gpops2LicenseTest.m');
+      error('Invalid GPOPS-II License');
+  end
+else
+  error('Invalid GPOPS-II License');
+end
+clear strOut numOut
+% END GPOPS-II license verification ---------------------------------------
+
+%}
+

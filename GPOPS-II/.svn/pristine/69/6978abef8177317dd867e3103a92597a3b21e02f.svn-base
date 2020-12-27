@@ -1,0 +1,132 @@
+function zi = cadapp2val(matfilename,xi,yi,xorder,yorder)
+% zi = cadapp2val(matfilename,xi,yi,xorder,yorder)
+% Overloaded form of cadapp2val which is a 2-dimensional ppval type
+% function.
+%
+% Copyright 2011-214 Matthew J. Weinstein and Anil V. Rao
+% Distributed under the GNU General Public License version 3.0
+S = load(matfilename);
+coefs = S.coefs;
+x = S.x;
+y = S.y;
+
+Dind = zeros(4);
+Dind(:) = 1:16;
+Dind = Dind(1:xorder,1:yorder);
+Dind = Dind(:);
+D = coefs(:,:,Dind);
+
+% Create Derivative coefs if needed
+if yorder == 3
+    D(:,:,1:xorder) = D(:,:,1:xorder)*3;
+    D(:,:,xorder+1:xorder*2) = D(:,:,xorder+1:xorder*2)*2;
+elseif yorder == 2 || yorder == 1
+    D(:,:,1:xorder) = D(:,:,1:xorder)*6;
+end
+if xorder == 3
+    D(:,:,1:3:yorder*3) = D(:,:,1:3:yorder*3)*3;
+    D(:,:,2:3:yorder*3) = D(:,:,2:3:yorder*3)*2;
+elseif xorder == 2 || xorder == 1
+    D(:,:,1:xorder:yorder*xorder) = D(:,:,1:xorder:yorder*xorder)*6;
+end
+
+[M,N,~] = size(D);
+
+M = M+1;
+N = N+1;
+
+
+% want x and xi and row vectors, y and yi as column vectors
+[xiMrow,xiNcol] = size(xi);
+[yiMrow,yiNcol] = size(yi);
+
+% ni = length(xi);
+% mi = length(yi);
+
+if isvector(x)
+    if size(x,1) > 1
+        x = x.';
+    end
+elseif size(x,1) == M && size(x,2) == N
+    x = x(1,:);
+else
+    error('Matrices X and Y must be the same size as Z.')
+end
+if isvector(y)
+    if size(y,2) > 1
+        y = y.';
+    end
+elseif size(y,1) == M && size(y,2) == N
+    y = y(:,1);
+else
+    error('Matrices X and Y must be the same size as Z.')
+end
+
+if xiMrow ~= yiMrow && xiNcol ~= yiNcol    
+    % Don't think I need this
+%     if xiMrow == 1 && yiNcol == 1
+%         FMrow = yiMrow;
+%         FNcol = xiNcol;
+%         
+%         
+%     elseif xiNcol == 1 && yiMrow == 1
+%         %yi is on first dimension, xi is on second dimension
+%         xi = repmat(xi.',[yiNcol,1]);
+%         yi = repmat(yi.',[1,xiMrow]);
+%         FMrow = yiNcol;
+%         FNcol = xiMrow;
+%     else
+%         error('XI and YI must be the same size or vectors of different orientations.')
+%     end
+%     % find where xi and yi lie
+%     [~,xindex] = histc(xi,[-inf,x(2:N-1),inf]);
+%     [~,yindex] = histc(yi,[-inf;y(2:M-1);inf]);
+%     
+%     %switch to xi-x1, yi - y1
+%     xi = xi - x(xindex);
+%     yi = yi - y(yindex);
+%     
+%     xi = repmat(xi,[yiMrow,1]);
+%     yi = repmat(yi,[1,xiNcol]);
+%     % compute zi
+%     zi = zeros(FMrow,FNcol);
+%     K = 1;
+%     for I = yorder:-1:0
+%         for J = xorder:-1:0
+%             zi = zi + D(yindex,xindex,K).*yi.^I.*xi.^J;
+%             K = K+1;
+%         end
+%     end
+    error('WHERE DID THIS COME FROM?!?!, SHOULDNT GET THIS ERROR')
+else
+    FMrow = xiMrow;
+    FNcol = xiNcol;
+    
+    %find where xi and yi lie
+    [~,xindex] = histc(xi,[-inf,x(2:N-1),inf]);
+    [~,yindex] = histc(yi,[-inf;y(2:M-1);inf]);
+    
+    %switch to xi-x1, yi-y1
+    if FNcol == 1
+        xi = xi - x(xindex)';
+    else
+        xi = xi - x(xindex);
+    end
+    if FMrow == 1
+        yi = yi - y(yindex)';
+    else
+        yi = yi - y(yindex);
+    end
+    % compute zi
+    zi = zeros(FMrow,FNcol);
+    K = 1;
+    for I = yorder-1:-1:0
+        for J = xorder-1:-1:0
+            % need to use index referencing
+            dindex = sub2ind([M-1,N-1],yindex,xindex);
+            D1 = D(:,:,K);
+            zi = zi + D1(dindex).*yi.^I.*xi.^J;
+            K = K+1;
+        end
+    end
+end

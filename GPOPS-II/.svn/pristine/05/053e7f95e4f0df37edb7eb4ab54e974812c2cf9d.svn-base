@@ -1,0 +1,82 @@
+% --------------------------------------------%
+% File to Create GPOPS-II P-Code Distribution %
+% --------------------------------------------%
+function gpops2CommericalDistribution
+
+cd('..');
+gpopsMainDirectory = pwd;
+gpopsSNOPTDirectory = strcat(gpopsMainDirectory,'/nlp/snopt');
+gpopsSNOPTOldDirectory = strcat(gpopsMainDirectory,'/nlp/snoptOld');
+gpopsUsersGuideLaTeXDir = strcat(gpopsMainDirectory,'/zzUsersGuideLatexFiles');
+gpopsDistribution = strcat(gpopsMainDirectory,'/zzDistribution');
+gpopsLicenseDir = strcat(gpopsMainDirectory,'/license');
+if isdir('adigator');
+  adigatorDirectory = strcat(gpopsMainDirectory,'/adigator');
+end
+
+% Generate the P-code
+cd(gpopsMainDirectory);
+directories = cell(11,1);
+directories{1}  = strcat(gpopsMainDirectory,'/lib/gpopsADiGator');
+directories{2}  = strcat(gpopsMainDirectory,'/lib/gpopsCommon');
+directories{3}  = strcat(gpopsMainDirectory,'/lib/gpopsAutomaticScaling');
+directories{4}  = strcat(gpopsMainDirectory,'/lib/gpopsFiniteDifference');
+directories{5}  = strcat(gpopsMainDirectory,'/lib/gpopsMeshRefinement');
+directories{6}  = strcat(gpopsMainDirectory,'/lib/gpopsRPMDifferentiation');
+directories{7}  = strcat(gpopsMainDirectory,'/lib/gpopsRPMDifferentiation/gpopsIpoptRPMD');
+directories{8}  = strcat(gpopsMainDirectory,'/lib/gpopsRPMDifferentiation/gpopsSnoptRPMD');
+directories{9}  = strcat(gpopsMainDirectory,'/lib/gpopsRPMIntegration');
+directories{10} = strcat(gpopsMainDirectory,'/lib/gpopsRPMIntegration/gpopsIpoptRPMI');
+directories{11} = strcat(gpopsMainDirectory,'/lib/gpopsRPMIntegration/gpopsSnoptRPMI');
+for dircount = 1:length(directories);
+  cd(directories{dircount});
+  pcode *.m
+  delete *.m
+end
+
+cd(gpopsMainDirectory);
+
+% Remove the SNOPT Directory for Distribution
+rmdir(gpopsSNOPTDirectory,'s');
+if isdir(gpopsSNOPTDirectory);
+  error('GPOPS-II SNOPT Directory Not Removed Successfully');
+else
+  disp('GPOPS-II SNOPT Directory Removed Successfully');
+end
+
+% Remove the SNOPT_OLD Directory for Distribution
+rmdir(gpopsSNOPTOldDirectory,'s');
+if isdir(gpopsSNOPTOldDirectory);
+  error('GPOPS-II SNOPT_OLD Directory Not Removed Successfully');
+else
+  disp('GPOPS-II SNOPT_OLD Directory Removed Successfully');
+end
+
+% Remove the ADiGator Directory for Distribution
+rmdir(adigatorDirectory,'s');
+if isdir(adigatorDirectory);
+  error('GPOPS-II ADiGator Directory Not Removed Successfully');
+else
+  disp('GPOPS-II ADiGator Directory Removed Successfully');
+end
+
+% Remove the Directory zzUsersGuideLatexFiles
+rmdir(gpopsUsersGuideLaTeXDir,'s');
+if isdir(gpopsUsersGuideLaTeXDir);
+  error('GPOPS-II zzUsersGuideLatexFiles Directory Not Removed Successfully');
+else
+  disp('GPOPS-II zzUsersGuideLatexFiles Directory Removed Successfully');
+end
+
+% Remove the Directory zzDistribution
+rmdir(gpopsDistribution,'s');
+if isdir(gpopsDistribution);
+  error('GPOPS-II zzDistribution Directory Not Removed Successfully');
+else
+  disp('GPOPS-II zzDistribution Directory Removed Successfully');
+end
+
+% Remove the Internally Used License File
+cd(gpopsLicenseDir);
+delete gpops2License.m
+delete gpops2License.p

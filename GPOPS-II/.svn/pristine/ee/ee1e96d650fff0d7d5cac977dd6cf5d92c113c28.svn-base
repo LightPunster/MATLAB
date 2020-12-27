@@ -1,0 +1,127 @@
+function [hesoutput,grdoutput] = gpopsAdigatorContHes(input,probinfo)
+% ADiGator wrapper for Continuous Hessian Values
+% Copyright 2011-2014 Matthew J. Weinstein and Anil V. Rao
+% Distributed under the GNU General Public License version 3.0
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Inputs                           %
+% ----------------------------------------------------------------------- %
+numphase = length(input.phase);
+for phasecount = 1:numphase
+  % State
+  if isfield(input.phase(phasecount),'state')
+    x = input.phase(phasecount).state;
+    input.phase(phasecount).state   = struct('f',x,'dV',ones(size(x)));
+  end
+  % Control
+  if isfield(input.phase(phasecount),'control')
+    u = input.phase(phasecount).control;
+    input.phase(phasecount).control = struct('f',u,'dV',ones(size(u)));
+  end
+  % Time Endpoints
+  t = input.phase(phasecount).time;
+  input.phase(phasecount).time      = struct('f',t,'dV',ones(size(t)));
+  % Parameter
+  if isfield(input.phase(phasecount),'parameter')
+    par = input.phase(phasecount).parameter;
+    input.phase(phasecount).parameter = struct('f',par,'dV',ones(size(par)));
+  end
+end
+
+% ----------------------------------------------------------------------- %
+%                          Call Derivative File                           %
+% ----------------------------------------------------------------------- %
+output = feval(probinfo.adigator.conthes,input);
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Outputs                          %
+% ----------------------------------------------------------------------- %
+dynamicsflag = false;
+pathflag = false;
+integrandflag = false;
+grdflag = false;
+if isfield(output,'dynamics')
+  dynamicsflag = true;
+  hesoutput(numphase).dynamicshes = [];
+end
+if isfield(output,'path')
+  pathflag = true;
+  hesoutput(numphase).pathhes = [];
+end
+if isfield(output,'integrand')
+  integrandflag = true;
+  hesoutput(numphase).integrandhes = [];
+end
+
+if nargout > 1
+  grdflag = true;
+  if dynamicsflag
+    grdoutput(numphase).dynamicsgrd = [];
+  end
+  if pathflag
+    grdoutput(numphase).pathgrd = [];
+  end
+  if integrandflag
+    grdoutput(numphase).integrandgrd = [];
+  end
+end
+
+% Upper and Lower Locations Structure
+heslocs = probinfo.adigator.conthesloc;
+
+
+for phasecount = 1:numphase
+  % Dynamics
+  if dynamicsflag
+    dynamics = output(phasecount).dynamics;
+    if isstruct(dynamics)
+      if isfield(dynamics,'dVdV_location')
+        hes      = dynamics.dVdV;
+        upperloc = heslocs(phasecount).dynamicsupper;
+        lowerloc = heslocs(phasecount).dynamicslower;
+        hes(:,upperloc) = (hes(:,upperloc)+hes(:,lowerloc))./2;
+        hes(:,lowerloc) = [];
+        hesoutput(phasecount).dynamicshes = hes;
+      end
+      if grdflag && isfield(dynamics,'dV_location')
+        grdoutput(phasecount).dynamicsgrd = dynamics.dV;
+      end
+    end
+  end
+  % Path
+  if pathflag
+    path = output(phasecount).path;
+    if isstruct(path)
+      if isfield(path,'dVdV_location')
+        hes      = path.dVdV;
+        upperloc = heslocs(phasecount).pathupper;
+        lowerloc = heslocs(phasecount).pathlower;
+        hes(:,upperloc) = (hes(:,upperloc)+hes(:,lowerloc))./2;
+        hes(:,lowerloc) = [];
+        hesoutput(phasecount).pathhes = hes;
+      end
+      if grdflag && isfield(path,'dV_location')
+        grdoutput(phasecount).pathgrd = path.dV;
+      end
+    end
+  end
+  % Integrand
+  if integrandflag
+    integrand = output(phasecount).integrand;
+    if isstruct(integrand)
+      if isfield(integrand,'dVdV_location')
+        hes      = integrand.dVdV;
+        upperloc = heslocs(phasecount).integrandupper;
+        lowerloc = heslocs(phasecount).integrandlower;
+        hes(:,upperloc) = (hes(:,upperloc)+hes(:,lowerloc))./2;
+        hes(:,lowerloc) = [];
+        hesoutput(phasecount).integrandhes = hes;
+      end
+      if grdflag && isfield(integrand,'dV_location')
+        grdoutput(phasecount).integrandgrd = integrand.dV;
+      end
+    end
+  end
+end
+
+end

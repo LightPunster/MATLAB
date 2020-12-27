@@ -1,0 +1,256 @@
+function output = gpopsMeshShell(setup, probinfo)
+
+% gpopsMeshShell
+% this is the shell function where different mesh refinement algorithms are
+% called
+
+% ouput fields
+output.name = setup.name;
+
+% get scale algorithm
+if strcmpi(setup.scales.method, 'none');
+  scalemethod = 'none';
+elseif strcmpi(setup.scales.method, 'automatic-bounds') ||...
+    strcmpi(setup.scales.method, 'automatic-hybrid') ||...
+    strcmpi(setup.scales.method, 'automatic-hybridUpdate');
+  scalemethod = 'bounds';
+elseif strcmpi(setup.scales.method, 'automatic-guess') ||...
+    strcmpi(setup.scales.method, 'automatic-guessUpdate');
+  scalemethod = 'guess';
+elseif strcmpi(setup.scales.method, 'defined')
+  scalemethod = 'defined';
+end
+
+if probinfo.displaylevel > 0;
+  disp(' ___________________________________________________________________ ');
+  disp('|                                                                   |');
+  disp('|                 Finding Solution on Initial Mesh                  |');
+  disp('|___________________________________________________________________|');
+end
+
+% solve on initial mesh
+if strcmpi(setup.method, 'RPM-Differentiation');
+  % use differentiation method
+  result = gpopsSolveRPMD(setup, probinfo, scalemethod);
+    % update warm start flag in probinfo
+    probinfo.warmStartFlag = result.warmStartFlag;
+elseif strcmpi(setup.method, 'RPM-Integration');
+  % use integration method
+  result = gpopsSolveRPMI(setup, probinfo, scalemethod);
+end
+
+% store setup in reseult
+result.setup = setup;
+
+% perform mesh analysis
+if ~strcmpi(setup.mesh.method, 'none');
+  % initialize meshcount = 0;
+  meshcount = 1;
+  
+  % store mesh history
+  meshhistory(meshcount).result = result;
+  
+  % Select analysis algorithm
+  if strcmpi(setup.mesh.method,'hp-PattersonRao');
+    [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpPR(result, setup, probinfo);
+  elseif strcmpi(setup.mesh.method,'hp-DarbyRao');
+    [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpDR(result, setup, probinfo);
+  elseif strcmpi(setup.mesh.method,'hp-LiuRao');
+    [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpLR(result, setup, probinfo, meshhistory, meshcount);
+  elseif strcmpi(setup.mesh.method,'hp-LiuRao-Legendre');
+    [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpLR_L(result, setup, probinfo);
+  end
+  
+  % save maxerror as field of result
+  meshhistory(meshcount).result.maxerror = maxerror;
+  
+  if meshcount > setup.mesh.maxiterations && ~meshaccepted;
+    meshaccepted = true;
+    if probinfo.displaylevel > 0;
+      disp('  Mesh iteration limit reached without satisfying error tolerance');
+    end
+    
+    % get scale algorithm for mesh iteration
+    if strcmpi(setup.scales.method, 'automatic-bounds') ||...
+        strcmpi(setup.scales.method, 'automatic-guess');
+      % Use scales
+      setup.scales = result.ocpscales;
+      setup.scales.method = 'defined';
+    elseif strcmpi(setup.scales.method, 'automatic-hybridUpdate');
+      % find new scales from guess
+      setup.scales.method = 'automatic-guessUpdate';
+    elseif strcmpi(setup.scales.method, 'automatic-hybrid');
+      % find new scales from guess then re-use them
+      setup.scales.method = 'automatic-guess';
+    end
+    
+    % if mesh is not accepted and iteration limit not reached
+    % resolve problem on new mesh
+    setup.mesh.phase = newmesh;
+    setup.guess = result.solution;
+    
+    % remove field guess.costate
+    if ~probinfo.warmStartFlag
+      setup.guess.phase = rmfield(setup.guess.phase,'costate');
+    end
+    
+    % remove field guess.costate
+    setup.guess.phase = rmfield(setup.guess.phase,'timeRadau');
+    
+    % remove field guess.costate
+    if isfield(setup.guess.phase,'controlRadau');
+      setup.guess.phase = rmfield(setup.guess.phase,'controlRadau');
+    end
+    
+    % save next setup
+    result.nextsetup = setup;
+  end
+  
+  % iterate until mesh is accepted
+  while ~meshaccepted;
+    % increase meshint
+    meshcount = meshcount + 1;
+    
+    % if mesh is not accepted and iteration limit not reached
+    % resolve problem on new mesh
+    setup.mesh.phase = newmesh;
+    setup.guess = result.solution;
+    
+    % remove field guess.costate
+    if ~probinfo.warmStartFlag
+      setup.guess.phase = rmfield(setup.guess.phase,'costate');
+    end
+    
+    % remove field guess.costate
+    setup.guess.phase = rmfield(setup.guess.phase,'timeRadau');
+    
+    % remove field guess.costate
+    if isfield(setup.guess.phase,'controlRadau');
+      setup.guess.phase = rmfield(setup.guess.phase,'controlRadau');
+    end
+    
+    % get scale algorithm for mesh iteration
+    if strcmpi(setup.scales.method, 'none');
+      scalemethod = 'none';
+    elseif strcmpi(setup.scales.method, 'automatic-bounds') ||...
+        strcmpi(setup.scales.method, 'automatic-guess');
+      % Use scales
+      setup.scales = result.ocpscales;
+      setup.scales.method = 'defined';
+      scalemethod = 'defined';
+    elseif strcmpi(setup.scales.method, 'automatic-guessUpdate');
+      % find new scales from guess
+      scalemethod = 'guess';
+    elseif strcmpi(setup.scales.method, 'automatic-hybridUpdate');
+      % find new scales from guess
+      setup.scales.method = 'automatic-guessUpdate';
+      scalemethod = 'guess';
+    elseif strcmpi(setup.scales.method, 'automatic-hybrid');
+      % find new scales from guess then re-use them
+      setup.scales.method = 'automatic-guess';
+      scalemethod = 'guess';
+    elseif strcmpi(setup.scales.method, 'defined')
+      % use defined scales
+      scalemethod = 'defined';
+    end
+    
+    if probinfo.displaylevel > 0;
+      if meshcount<10,
+        disp(' ___________________________________________________________________ ');
+        disp('|                                                                   |');
+        disp(['|                     Finding Solution on Mesh ',num2str(meshcount),'                    |']);
+        disp('|___________________________________________________________________|');
+      else
+        disp(' ___________________________________________________________________ ');
+        disp('|                                                                   |');
+        disp(['|                     Finding Solution on Mesh ',num2str(meshcount),'                   |']);
+        disp('|___________________________________________________________________|');
+      end;
+    end
+    
+    % solve on initial mesh
+    if strcmpi(setup.method, 'RPM-Differentiation');
+      % use differentiation method
+      result = gpopsSolveRPMD(setup, probinfo, scalemethod);
+        % update warm start flag in probinfo
+        probinfo.warmStartFlag = result.warmStartFlag;
+    elseif strcmpi(setup.method, 'RPM-Integration');
+      % use integration method
+      result = gpopsSolveRPMI(setup, probinfo, scalemethod);
+    end
+    
+    % store setup in reseult
+    result.setup = setup;
+    
+    % store mesh history
+    meshhistory(meshcount).result = result;
+    
+    % Select analysis algorithm
+    if strcmpi(setup.mesh.method,'hp-PattersonRao');
+      [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpPR(result, setup, probinfo);
+    elseif strcmpi(setup.mesh.method,'hp-DarbyRao');
+      [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpDR(result, setup, probinfo);
+    elseif strcmpi(setup.mesh.method,'hp-LiuRao');
+      [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpLR(result, setup, probinfo, meshhistory, meshcount);
+    elseif strcmpi(setup.mesh.method,'hp-LiuRao-Legendre');
+      [meshaccepted, newmesh, maxerror] = gpopsMeshAnalysis_hpLR_L(result, setup, probinfo);
+    end
+    
+    % save maxerror as field of result
+    meshhistory(meshcount).result.maxerror = maxerror;
+    
+    % check if iteration limit reached without satisfying the error
+    if meshcount > setup.mesh.maxiterations && ~meshaccepted;
+      meshaccepted = true;
+      if probinfo.displaylevel > 0;
+        disp('  Mesh iteration limit reached without satisfying error tolerance');
+      end
+      
+      % get scale algorithm for mesh iteration
+      if strcmpi(setup.scales.method, 'automatic-bounds') ||...
+          strcmpi(setup.scales.method, 'automatic-guess');
+        % Use scales
+        setup.scales = result.ocpscales;
+        setup.scales.method = 'defined';
+      elseif strcmpi(setup.scales.method, 'automatic-hybridUpdate');
+        % find new scales from guess
+        setup.scales.method = 'automatic-guessUpdate';
+      elseif strcmpi(setup.scales.method, 'automatic-hybrid');
+        % find new scales from guess then re-use them
+        setup.scales.method = 'automatic-guess';
+      end
+      
+      % if mesh is not accepted and iteration limit not reached
+      % resolve problem on new mesh
+      setup.mesh.phase = newmesh;
+      setup.guess = result.solution;
+      
+      % remove field guess.costate
+      setup.guess.phase = rmfield(setup.guess.phase,'costate');
+      
+      % remove field guess.costate
+      setup.guess.phase = rmfield(setup.guess.phase,'timeRadau');
+      
+      % remove field guess.costate
+      if isfield(setup.guess.phase,'controlRadau');
+        setup.guess.phase = rmfield(setup.guess.phase,'controlRadau');
+      end
+      
+      % save next setup
+      result.nextsetup = setup;
+    end
+  end
+  
+  % save maxerror as field of result
+  result.maxerror = maxerror;
+  
+  % ouput mesh history and mesh iterations
+  output.meshcounts = meshcount;
+  output.meshhistory = meshhistory;
+end
+
+% interp final solution here
+result.interpsolution = gpopsInterpResult(result);
+
+% ouput fields
+output.result = result;

@@ -1,0 +1,145 @@
+function result = gpopsSnoptHandlerRPMI(ZG, ZL, ZU, FL, FU, name, nlpoptions, probinfo)
+
+% snopt requires that aux data be global
+global GLOBALPROBINFO igrid
+igrid = 1;
+
+% get NLP sparsity patterns
+[grdjacnonlinpat, iGrow, jGcol, probinfo] = gpopsSnoptSparsityRPMI(probinfo);
+
+% for snopt add cost gradient as first row of jacobian
+FL = [-inf; FL];
+FU = [inf; FU];
+
+if exist('snoptmex','file')==3;
+  clear snoptmex
+elseif exist('snoptcmex','file')==3;
+  clear snoptcmex
+end
+
+ObjAdd = 0; %add nothing to objective
+ObjRow = 1; %objective row
+
+% initiate states and multipliers as 0
+xmul   = zeros(probinfo.nlpnumvar,1);
+xstate = xmul;
+Fmul   = zeros(probinfo.nlpnumcon+1,1);
+Fstate = Fmul;
+
+% make probinfo set to GLOBALPROBINFO
+GLOBALPROBINFO = probinfo;
+
+% set snopt options
+snseti('Verify Level',-1);        % Derivative Verification Level
+snseti('Timing level',3);         % Print Execution Time to File
+snset('Hessian Limited Memory');  % Choose Hessian Type
+% snseti('Major Iterations Limit',100000); % Major Iteration Limit
+% snseti('Minor Iterations Limit',100000); % Minor Iteration Limit
+
+% setup nlp options from nlpoptions
+snsetr('Major Optimality Tolerance',nlpoptions.tolerance);
+snsetr('Major Feasibility Tolerance',2*nlpoptions.tolerance);
+snseti('Major Iterations Limit',nlpoptions.maxiterations); % Major Iteration Limit
+snseti('Minor Iterations Limit',max(500,3*length(FL))); % Minor Iteration Limit
+snseti('Iteration Limit',max(10000,20*length(FL)));
+% snseti('Iteration Limit',max(100000,20*length(FL)));
+snset('Warm Start');
+
+% NLP print to screen
+if probinfo.displaylevel > 1;
+  snprint([name,'SNOPTinfo.txt']);  % Name of SNOPT Print File
+  snscreen on % Print snopt to terminal screen
+else
+  snscreen off % DO NOT Print snopt to terminal screen
+end
+clear probinfo
+
+% NLP derivative options
+snseti('Derivative Option',1); % 1 derivates are supplied >>>>>>>>>
+
+%snseti('Derivative Option',0); % 0 derivates NOT supplied
+% use matlab linear indexing
+%Jacindex = (jGcol-1)*GLOBALPROBINFO.nlpnumcon+1 + iGrow;
+Jacindex = sub2ind([GLOBALPROBINFO.nlpnumcon+1, GLOBALPROBINFO.nlpnumvar], iGrow, jGcol);
+if GLOBALPROBINFO.scaleflag;
+  
+  % add scale for objective
+  GLOBALPROBINFO.Fscale = [GLOBALPROBINFO.objscale; GLOBALPROBINFO.Fscale];
+  
+  % scale NLP bounds
+  ZL = GLOBALPROBINFO.Zscale.*ZL + GLOBALPROBINFO.Zshift;
+  ZU = GLOBALPROBINFO.Zscale.*ZU + GLOBALPROBINFO.Zshift;
+  ZG = GLOBALPROBINFO.Zscale.*ZG + GLOBALPROBINFO.Zshift;
+  FL = GLOBALPROBINFO.Fscale.*FL;
+  FU = GLOBALPROBINFO.Fscale.*FU;
+  
+  % scale AA
+  GLOBALPROBINFO.Jacscale = GLOBALPROBINFO.Fscale(grdjacnonlinpat(:,1))./GLOBALPROBINFO.Zscale(grdjacnonlinpat(:,2));
+  
+  % scale jaclinear (used in callback)
+  %JaclinMat = diag(sparse(GLOBALPROBINFO.Fscale))*JaclinMat*diag(sparse(1./GLOBALPROBINFO.Zscale));
+  GLOBALPROBINFO.grdjaclinVectscaled = GLOBALPROBINFO.grdjaclinMat(Jacindex).*GLOBALPROBINFO.Fscale(iGrow)./GLOBALPROBINFO.Zscale(jGcol);
+  
+  % set snopt callback function
+  if exist('snoptmex','file')==3;
+    NLPfun = @gpopsSnoptFunJacScaledRPMI;
+  elseif exist('snoptcmex','file')==3;
+    NLPfun = 'gpopsSnoptFunJacScaledRPMI';
+  end
+else
+  GLOBALPROBINFO.grdjaclinVect = GLOBALPROBINFO.grdjaclinMat(Jacindex);
+
+  % set snopt callback function
+  if exist('snoptmex','file')==3;
+    NLPfun = @gpopsSnoptFunJacRPMI;
+  elseif exist('snoptcmex','file')==3;
+    NLPfun = 'gpopsSnoptFunJacRPMI';
+  end
+end
+
+% the linear parts of the snopt input will be set to blank '[]' because the
+% integration scheme doesnot contain enought linear jacobian elements to
+% justify linear seperation
+
+% record snopt solution time
+tstart = tic; % record ipopt runtime
+
+% Call whichever version of SNOPT is on the user path.
+% The order of preference is the new version (FORTRAN) mex file
+% followed by the old (C) mex file.
+solveopt = 1;
+if exist('snoptmex','file')==3;
+  % Call the new version of SNOPT if it is on the user path
+  [Zsol,F,info,xmul,Fmul] = snopt(ZG,ZL,ZU,xmul,xstate,FL,FU,Fmul,Fstate,NLPfun,ObjAdd,ObjRow,[],[],[],iGrow,jGcol);
+% [Zsol,F,info,xmul,Fmul] = snoptmex(solveopt,ZG,ZL,ZU,xmul,xstate,FL,FU,Fmul,Fstate,ObjAdd,ObjRow,[],[],[],iGrow,jGcol,NLPfun);
+elseif exist('snoptcmex','file')==3;
+  % Othewrise call the old version of SNOPT if it is on the user path
+  [Zsol,F,xmul,Fmul,info,xstate,Fstate,ns,ninf,sinf,mincw,miniw,minrw] = snoptcmex(solveopt,ZG,ZL,ZU,xmul,xstate,FL,FU,Fmul,Fstate,ObjAdd,ObjRow,[],[],[],iGrow,jGcol,NLPfun);
+end
+  
+runtime = toc(tstart);
+
+% unscale output
+if GLOBALPROBINFO.scaleflag;
+  Zsol = (Zsol - GLOBALPROBINFO.Zshift)./GLOBALPROBINFO.Zscale;
+  Fmul = Fmul.*GLOBALPROBINFO.Fscale;
+  F = F./GLOBALPROBINFO.Fscale;
+end
+
+% remove multiplier on cost
+Fmul = Fmul(2:GLOBALPROBINFO.nlpnumcon+1);
+
+% get cost
+result.objective = gpopsObjRPMD(Zsol, GLOBALPROBINFO);
+
+% get solution
+[result.solution, result.nlpmultipliers] = gpopsSolutionRPMI(Zsol, Fmul, GLOBALPROBINFO);
+
+% get nlp output info
+result.nlpinfo = info;
+
+% get nlp solver time
+result.nlptime = runtime;
+
+% clear global variables
+clearvars -global GLOBALPROBINFO igrid

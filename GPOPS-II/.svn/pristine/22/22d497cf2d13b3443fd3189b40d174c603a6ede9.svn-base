@@ -1,0 +1,169 @@
+function yi = ppval(pp,xi)
+% CADA overloaded PPVAL
+%
+% Copyright 2011-2014 Matthew J. Weinstein and Anil V. Rao
+% Distributed under the GNU General Public License version 3.0
+global ADIGATOR
+NUMvod  = ADIGATOR.NVAROFDIFF;
+fid     = ADIGATOR.PRINT.FID;
+PFLAG   = ADIGATOR.PRINT.FLAG;
+indent  = ADIGATOR.PRINT.INDENT;
+NDstr   = sprintf('%1.0f',ADIGATOR.DERNUMBER);
+% -------------------------- Parse Inputs ------------------------------- %
+if isa(pp,'cada') && isfield(pp.func,'pp')
+  fpp = pp.func.value;
+  if ~isfield(fpp,'form')
+    fpp.form = 'pp';
+  end
+elseif isstruct(pp) 
+  fpp = pp;
+  if ~isfield(fpp,'form')
+    fpp.form = 'pp';
+  end
+  ppnew.id = [];
+  ppnew.func = struct('name',[],'size',[1 1],'zerolocs',[],'value',pp,'pp',[]);
+  
+  if isa(fpp.breaks,'cada')
+    fpp.breaks = fpp.breaks.func.value;
+    fpp.coefs  = fpp.coefs.func.value;
+    fpp.pieces = fpp.pieces.func.value;
+    fpp.order  = fpp.order.func.value;
+    fpp.dim    = fpp.dim.func.value;
+    if PFLAG
+      ppnew.func.name = cadamatprint(fpp);
+    end
+  end
+  pp = ppnew;
+else
+  error ('invalid input to ppval');
+end
+
+if isa(xi,'cada')
+  xiMrow = xi.func.size(1);
+  xiNcol = xi.func.size(2);
+elseif isnumeric(xi)
+  [xiMrow, xiNcol] = size(xi);
+  xinew.id = [];
+  xinew.func = struct('name',[],'size',[xiMrow,xiNcol],'zerolocs',[],'value',xi);
+  if PFLAG
+    xinew.func.name = cadamatprint(xi);
+  end
+  xinew.deriv = struct('name',cell(NUMvod,1),'nzlocs',cell(NUMvod,1));
+  xi = xinew;
+else
+  error('invalid input to ppval')
+end
+
+% --------------------------- Build Function ---------------------------- %
+if xiMrow > 1 && xiNcol > 1 && fpp.dim > 1
+  error('Result of ppval must be vector or matrix')
+elseif fpp.dim == 1
+  yiMrow = xiMrow;
+  yiNcol = xiNcol;
+elseif xiMrow == 1 && xiNcol == 1
+  yiMrow = fpp.dim;
+  yiNcol = 1;
+else
+  yiMrow = xiMrow*xiNcol;
+  yiNcol = fpp.dim;
+end
+yi.id = ADIGATOR.VARINFO.COUNT;
+[funcstr,DPFLAG] = cadafuncname();
+yi.func = struct('name',funcstr,'size',[yiMrow yiNcol],'zerolocs',...
+  [],'value',[]);
+if isfield(xi.func,'logicref')
+  if fpp.dim == 1
+    yi.func.logicref = xi.func.logicref;
+  elseif xiMrow == 1 && ~xi.func.logicref(1)
+    yi.func.logicref = [xi.func.logicref(1), 0];
+  elseif xiNcol == 1 && ~xi.func.logicref(2)
+    yi.func.logicref = xi.func.logicref;
+  else
+    error('Cannot track the logical reference in this instance');
+  end
+end
+if ~isempty(xi.func.value)
+  yi.func.value = ppval(fpp,xi.func.value);
+end
+if isinf(yiMrow); 
+  yvec = 1; yiMrow = 1; 
+elseif isinf(yiNcol)
+  yvec = 2; yiNcol = 1;
+else
+  yvec = 0;
+end
+if isinf(xiMrow); xiMrow = 1; elseif isinf(xiNcol); xiNcol = 1; end
+
+% --------------------------- Build Derivative -------------------------- %
+yi.deriv = struct('name',cell(NUMvod,1),'nzlocs',cell(NUMvod,1));
+if fpp.order > 1 && cadaCheckForDerivs(xi)
+  % Build derivative pp
+  if DPFLAG
+    dpp = fpp;
+    dpp.coefs(:,end) = [];
+    for J = 1:fpp.order-2
+      dpp.coefs(:,J) = (fpp.order-J).*dpp.coefs(:,J);
+    end
+    dpp.order = dpp.order-1;
+    TF1 = ['cada',NDstr,'tf1'];
+    dppStr = cadamatprint(dpp);
+    fprintf(fid,[indent,TF1,' = ppval(',dppStr,',',xi.func.name,');\n']);
+  end
+  for Vcount = 1:NUMvod
+    if ~isempty(xi.deriv(Vcount).nzlocs)
+      derivstr = cadadername(funcstr,Vcount);
+      yi.deriv(Vcount).name    = derivstr;
+      if xiMrow == yiMrow && xiNcol == yiNcol
+        % yi is same size as xi
+        yi.deriv(Vcount).nzlocs = xi.deriv(Vcount).nzlocs;
+        DYiStr = xi.deriv(Vcount).name;
+        yirows = yi.deriv(Vcount).nzlocs(:,1);
+      else
+        % need to repmat xi derivs first
+        xirows = xi.deriv(Vcount).nzlocs(:,1);
+        xicols = xi.deriv(Vcount).nzlocs(:,2);
+        nzxi   = length(xirows);
+        nv     = ADIGATOR.VAROFDIFF(Vcount).usize;
+        dxi = sparse(xirows,xicols,1:nzxi,xiMrow*xiNcol,nv);
+        dyi = repmat(dxi,[yiNcol 1]);
+        [yirows, yicols, xilocs] = find(dyi);
+        if size(yirows,2) > 1
+          yirows = yirows.'; yicols = yicols.';
+        end
+        yi.deriv(Vcount).nzlocs = [yirows yicols];
+        if DPFLAG
+          DYiStr  = ['cada',NDstr,'td1'];
+          xindstr = cadaindprint(xilocs);
+          if yvec
+            fprintf(fid,[indent,DYiStr,' = ',x.deriv(Vcount).name,'(:,',xindstr,');\n']);
+          else
+            fprintf(fid,[indent,DYiStr,' = ',x.deriv(Vcount).name,'(',xindstr,');\n']);
+          end
+        end
+      end
+      if DPFLAG
+        TF2 = ['cada',NDstr,'tf2'];
+        findstr = cadaindprint(yirows);
+        if yvec == 1
+          fprintf(fid,[indent,derivstr,' = ',TF1,'(:,',findstr,').*',DYiStr,';\n']);
+        elseif yvec
+          fprintf(fid,[indent,derivstr,' = ',TF1,'(',findstr,',:).''.*',DYiStr,';\n']);
+        else
+          fprintf(fid,[indent,TF2,' = ',TF1,'(',findstr,');\n']);
+          fprintf(fid,[indent,derivstr,' = ',TF2,'(:).*',DYiStr,';\n']);
+        end
+      end
+    end
+  end
+end
+
+% Print Function
+if PFLAG
+  fprintf(fid,[indent,funcstr,' = ppval(',pp.func.name,',',xi.func.name,');\n']);
+end
+
+ADIGATOR.VARINFO.LASTOCC([xi.id yi.id],1) = ADIGATOR.VARINFO.COUNT;
+ADIGATOR.VARINFO.COUNT = ADIGATOR.VARINFO.COUNT+1;
+yi = class(yi,'cada');
+return
+end

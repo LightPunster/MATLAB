@@ -1,0 +1,104 @@
+function grdoutput = gpopsAdigatorContGrdLoc(input,probinfo)
+% ADiGator wrapper for Continuous Gradient
+% Copyright 2011-2014 Matthew J. Weinstein and Anil V. Rao
+% Distributed under the GNU General Public License version 3.0
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Inputs                           %
+% ----------------------------------------------------------------------- %
+numphase = length(input.phase);
+for phasecount = 1:numphase
+  % State
+  if isfield(input.phase(phasecount),'state')
+    x = input.phase(phasecount).state;
+    input.phase(phasecount).state   = struct('f',x,'dV',ones(size(x)));
+  end
+  % Control
+  if isfield(input.phase(phasecount),'control')
+    u = input.phase(phasecount).control;
+    input.phase(phasecount).control = struct('f',u,'dV',ones(size(u)));
+  end
+  % Time Endpoints
+  t = input.phase(phasecount).time;
+  input.phase(phasecount).time      = struct('f',t,'dV',ones(size(t)));
+  % Parameter
+  if isfield(input.phase(phasecount),'parameter')
+    par = input.phase(phasecount).parameter;
+    input.phase(phasecount).parameter = struct('f',par,'dV',ones(size(par)));
+  end
+end
+
+% ----------------------------------------------------------------------- %
+%                          Call Derivative File                           %
+% ----------------------------------------------------------------------- %
+output = feval(probinfo.adigator.contgrd,input);
+
+% ----------------------------------------------------------------------- %
+%                            Restructure Outputs                          %
+% ----------------------------------------------------------------------- %
+dynamicsflag = false;
+pathflag = false;
+integrandflag = false;
+if isfield(output,'dynamics')
+  dynamicsflag = true;
+  grdoutput(numphase).dynamicsgrdloc = [];
+end
+if isfield(output,'path')
+  pathflag = true;
+  grdoutput(numphase).pathgrdloc = [];
+end
+if isfield(output,'integrand')
+  integrandflag = true;
+  grdoutput(numphase).integrandgrdloc = [];
+end
+
+for phasecount = 1:numphase
+  % Dynamics
+  if dynamicsflag
+    dynamics = output(phasecount).dynamics;
+    if isstruct(dynamics)
+      if isfield(dynamics,'dV_location')
+        if size(dynamics.dV_location,2) == 1
+          dynamics.dV_location = ...
+            [ones(size(dynamics.dV_location,1),1),dynamics.dV_location];
+        end
+        grdoutput(phasecount).dynamicsgrdloc = dynamics.dV_location.';
+      end
+    end
+    if isempty(grdoutput(phasecount).dynamicsgrdloc)
+      grdoutput(phasecount).dynamicsgrdloc = zeros(2,0);
+    end
+  end
+  % Path
+  if pathflag
+    path = output(phasecount).path;
+    if isstruct(path)
+      if isfield(path,'dV_location')
+        if size(path.dV_location,2) == 1
+          path.dV_location = ...
+            [ones(size(path.dV_location,1),1),path.dV_location];
+        end
+        grdoutput(phasecount).pathgrdloc = path.dV_location.';
+      end
+    end
+    if isempty(grdoutput(phasecount).pathgrdloc)
+      grdoutput(phasecount).pathgrdloc = zeros(2,0);
+    end
+  end
+  % Integrand
+  if integrandflag
+    integrand = output(phasecount).integrand;
+    if isstruct(integrand)
+      if isfield(integrand,'dV_location')
+        if size(integrand.dV_location,2) == 1
+          integrand.dV_location = ...
+            [ones(size(integrand.dV_location,1),1),integrand.dV_location];
+        end
+        grdoutput(phasecount).integrandgrdloc = integrand.dV_location.';
+      end
+    end
+    if isempty(grdoutput(phasecount).integrandgrdloc)
+      grdoutput(phasecount).integrandgrdloc = zeros(2,0);
+    end
+  end
+end

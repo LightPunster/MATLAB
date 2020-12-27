@@ -1,0 +1,380 @@
+function varargout = gpopsGuessRPMD(setup, probinfo)
+
+% gpopsGuessRPMD
+% this function generates the guess for the nonlinear program from the
+% guess given for the optimal control problem found in the setup
+
+% preallocate varargout
+varargout = cell(1,nargout);
+
+% get OCP info
+numphase = probinfo.numphase;
+numstate = probinfo.numstate;
+numcontrol = probinfo.numcontrol;
+numintegral = probinfo.numintegral;
+numparameter = probinfo.numparameter;
+numpath = probinfo.numpath;
+numeventgroup = probinfo.numeventgroup;
+
+% preallocate ZG
+ZG = zeros(probinfo.nlpnumvar,1);
+
+% preallocate FmulG, zlG, and zuG
+if probinfo.warmStartFlag && strcmp(setup.nlp.solver,'ipopt')
+  zlG   = zeros(probinfo.nlpnumvar,1);
+  zuG   = zeros(probinfo.nlpnumvar,1);
+  FmulG = zeros(probinfo.nlpnumcon,1);
+elseif probinfo.warmStartFlag && strcmp(setup.nlp.solver,'snopt')
+  ZmulG   = zeros(probinfo.nlpnumvar,1);
+  FmulG = zeros(probinfo.nlpnumcon,1);
+  ZstateG   = zeros(probinfo.nlpnumvar,1);
+  FstateG = zeros(probinfo.nlpnumcon,1);
+end
+
+for phasecount = 1:numphase;
+  % get guess for phase
+  guessp = setup.guess.phase(phasecount);
+  if probinfo.warmStartFlag && strcmp(setup.nlp.solver,'snopt')
+    guessb = setup.guess.basis.phase(phasecount);
+  end
+  % get contmap for phase
+  contmap = probinfo.nlpcontmap(phasecount);
+  
+  % get collocation for phase
+  meshp = probinfo.collocation(phasecount);
+  
+  % OCP info for phase
+  numstatep = numstate(phasecount);
+  numcontrolp = numcontrol(phasecount);
+  numintegralp = numintegral(phasecount);
+  numpathp = numpath(phasecount);
+  guesslength = size(guessp.time,1);
+  
+  % time domain for guess
+  timeguess = guessp.time;
+  t0R = timeguess(1,1);
+  tfR = timeguess(guesslength,1);
+  s = probinfo.collocation(phasecount).s(:,1);
+  sp1 = [s; 1];
+  timeinterp = (sp1 + 1).*(tfR - t0R)./2 + t0R;
+  
+  % get NLP guess for state variables and defect constraints in each phase
+  for statecount = 1:numstatep;
+    % get index from map
+    index = contmap.statemap(1,statecount):contmap.statemap(2,statecount);
+    
+    % interp state guess
+    ZG(index) = interp1(timeguess, guessp.state(:,statecount), timeinterp,'pchip');
+  end
+  
+  % get NLP guess for control variables in each phase
+  if numcontrolp ~= 0;
+    for controlcount = 1:numcontrolp;
+      % get index from map
+      index = contmap.controlmap(1,controlcount):contmap.controlmap(2,controlcount);
+      
+      % interp state guess
+      ZG(index) = interp1(timeguess, guessp.control(:,controlcount), timeinterp(1:(end-1)),'pchip');
+    end
+  end
+  
+  % get NLP guess for time
+  % get index for initial time from map
+  index = contmap.timemap(1);
+  
+  % guess for initial time in phase
+  ZG(index) = guessp.time(1);
+  
+  % get index for final time
+  index = contmap.timemap(2);
+  
+  % guess for final time in phase
+  ZG(index) = guessp.time(end);
+  
+  % get NLP guess for integral variables in each phase
+  if numintegralp ~= 0;
+    for integralcount = 1:numintegralp;
+      % get index from map
+      index = contmap.integralvarmap(1,integralcount);
+      
+      % interp integral guess
+      ZG(index) = guessp.integral(integralcount);
+    end
+  end
+  
+  if probinfo.warmStartFlag
+    % get NLP guess for constraint multipliers, {FmulG}
+    % [stack all phases(1;...;numphase); stack all events(1;...;numeventgroup)]
+    % [defects; paths; integral; duration] for each phase
+    
+    % get NLP guess for defect multipliers
+    for statecount = 1:numstatep;
+      % get index from map
+      index = contmap.defectmap(1,statecount):contmap.defectmap(2,statecount);
+      
+      % interp defect multiplier guess
+      FmulG(index) = interp1(timeguess, guessp.costate(:,statecount), timeinterp(1:(end-1)),'pchip');
+      
+      % convert costate guess to defect multiplier guess
+      FmulG(index) = FmulG(index).*meshp.w(:,2);
+    end
+    
+    % get NLP guess for path multipliers
+    if numpathp ~= 0
+      for pathcount = 1:numpathp;
+        % get index from map
+        index = contmap.pathmap(1,pathcount):contmap.pathmap(2,pathcount);
+        
+        % interp path multiplier guess
+        FmulG(index) = interp1(timeguess(1:(end-1)), guessp.pathmultipliers(:,pathcount), timeinterp(1:(end-1)),'pchip');
+         
+        % adjust guess for path multipliers
+        FmulG(index) = (tfR-t0R)./2.*FmulG(index).*meshp.w(:,1);
+      end
+    end
+    
+    % get NLP guess for integral multipliers
+    if numintegralp ~= 0
+      for integralcount = 1:numintegralp;
+        % get index from map
+        index = contmap.integrandmap(integralcount);
+        
+        % integral multiplier guess
+        FmulG(index) = guessp.integralmultipliers(integralcount);
+      end
+    end
+    
+    % get NLP guess for duration multipliers
+    % get index from map
+    index = contmap.durationmap;
+    % duration multiplier guess
+    FmulG(index) = guessp.durationmultipliers;
+    
+    if strcmp(setup.nlp.solver,'snopt')
+        
+        % get NLP guess for defect multipliers
+        for statecount = 1:numstatep;
+          % get index from map
+          index = contmap.defectmap(1,statecount):contmap.defectmap(2,statecount);
+          
+          FstateG(index) = interp1(timeguess(1:(end-1)), guessb.defectbasis(:,statecount), timeinterp(1:(end-1)),'pchip');
+        end
+
+        % get NLP guess for path multipliers
+        if numpathp ~= 0
+          for pathcount = 1:numpathp;
+            % get index from map
+            index = contmap.pathmap(1,pathcount):contmap.pathmap(2,pathcount);
+            
+            FstateG(index) = interp1(timeguess(1:(end-1)), guessb.pathbasis(:,pathcount), timeinterp(1:(end-1)),'pchip');
+          end
+        end
+
+        % get NLP guess for integral multipliers
+        if numintegralp ~= 0
+          for integralcount = 1:numintegralp;
+            % get index from map
+            index = contmap.integrandmap(integralcount);
+
+            % integral multiplier guess
+            
+            FstateG(index) = guessb.integralbasis(integralcount);
+          end
+        end
+
+        % get NLP guess for duration multipliers
+        % get index from map
+        index = contmap.durationmap;
+        % duration multiplier guess
+        FstateG(index) = guessb.durationbasis;         
+    end
+    
+  end
+  
+  if probinfo.warmStartFlag && strcmp(setup.nlp.solver,'ipopt')
+    % get NLP guess for variable bound multipliers, {zlG,zuG}
+    % [stack all phases(1;...;numphase)]
+    % [state*(nodes+1); control*(nodes); t0; tf; Q] for each phase
+    
+    % get NLP guess for state bound multipliers
+    for statecount = 1:numstatep;
+      % get index from map
+      index = contmap.statemap(1,statecount):contmap.statemap(2,statecount);
+      
+      % interp state bound multiplier guess
+      zlG(index) = interp1(timeguess, guessp.boundmultipliers.statemult.l(:,statecount), timeinterp,'pchip');
+      zuG(index) = interp1(timeguess, guessp.boundmultipliers.statemult.u(:,statecount), timeinterp,'pchip');
+      
+      % adjust state bound multiplier guess
+      zlG(index(2:end-1)) = (tfR-t0R)./2.*zlG(index(2:end-1)).*meshp.w(2:end,2);
+      zuG(index(2:end-1)) = (tfR-t0R)./2.*zuG(index(2:end-1)).*meshp.w(2:end,2);
+    end
+    
+    % get NLP guess for control bound multipliers
+    if numcontrolp ~= 0;
+      for controlcount = 1:numcontrolp;
+        % get index from map
+        index = contmap.controlmap(1,controlcount):contmap.controlmap(2,controlcount);
+        
+        % interp control bound multiplier guess
+        zlG(index) = interp1(timeguess(1:end-1), guessp.boundmultipliers.controlmult.l(:,controlcount), timeinterp(1:(end-1)),'pchip');
+        zuG(index) = interp1(timeguess(1:end-1), guessp.boundmultipliers.controlmult.u(:,controlcount), timeinterp(1:(end-1)),'pchip');
+        
+        % adjust control bound multiplier guess
+        zlG(index) = (tfR-t0R)./2.*zlG(index).*meshp.w(:,2);
+        zuG(index) = (tfR-t0R)./2.*zuG(index).*meshp.w(:,2);
+      end
+    end
+    
+    % get NLP guess for t0 and tf bound multipliers
+    % get index for initial time from map
+    index = contmap.timemap(1);
+    % guess for t0 bound multiplier in phase
+    zlG(index) = guessp.boundmultipliers.t0tfmult.l(1);
+    zuG(index) = guessp.boundmultipliers.t0tfmult.u(1);
+    % get index for final time
+    index = contmap.timemap(2);
+    % guess for final time in phase
+    zlG(index) = guessp.boundmultipliers.t0tfmult.l(2);
+    zuG(index) = guessp.boundmultipliers.t0tfmult.u(2);
+    
+    % get NLP guess for Q
+    if numintegralp ~= 0;
+      for integralcount = 1:numintegralp;
+        % get index from map
+        index = contmap.integralvarmap(1,integralcount);
+        % interp integral guess
+        zlG(index) = guessp.boundmultipliers.Qmult.l(integralcount);
+        zuG(index) = guessp.boundmultipliers.Qmult.u(integralcount);
+      end
+    end
+    
+  elseif probinfo.warmStartFlag && strcmp(setup.nlp.solver,'snopt')
+    % get NLP guess for variable bound multipliers, {ZmulG}
+    % [stack all phases(1;...;numphase)]
+    % [state*(nodes+1); control*(nodes); t0; tf; Q] for each phase
+    
+    % get NLP guess for state bound multipliers
+    for statecount = 1:numstatep;
+      % get index from map
+      index = contmap.statemap(1,statecount):contmap.statemap(2,statecount);
+      
+      % interp state bound multiplier guess
+      ZmulG(index) = interp1(timeguess, guessp.boundmultipliers.statemult(:,statecount), timeinterp,'pchip');
+      
+      % adjust state bound multiplier guess
+      ZmulG(index(2:end-1)) = (tfR-t0R)./2.*ZmulG(index(2:end-1)).*meshp.w(2:end,2);
+      
+      ZstateG(index) = interp1(timeguess, guessb.boundbasis.statebasis(:,statecount), timeinterp,'pchip');
+    end
+    
+    % get NLP guess for control bound multipliers
+    if numcontrolp ~= 0;
+      for controlcount = 1:numcontrolp;
+        % get index from map
+        index = contmap.controlmap(1,controlcount):contmap.controlmap(2,controlcount);
+        
+        % interp control bound multiplier guess
+        ZmulG(index) = interp1(timeguess(1:end-1), guessp.boundmultipliers.controlmult(:,controlcount), timeinterp(1:(end-1)),'pchip');
+        
+        % adjust control bound multiplier guess
+        ZmulG(index) = (tfR-t0R)./2.*ZmulG(index).*meshp.w(:,2);
+        
+        ZstateG(index) = interp1(timeguess(1:(end-1)), guessb.boundbasis.controlbasis(:,controlcount), timeinterp(1:(end-1)),'pchip');
+      end
+    end
+    
+    % get NLP guess for t0 and tf bound multipliers
+    % get index for initial time from map
+    index = contmap.timemap(1);
+    % guess for t0 bound multiplier in phase
+    ZmulG(index) = guessp.boundmultipliers.t0tfmult(1);
+    
+    ZstateG(index) = guessb.boundbasis.t0tfbasis(1);
+    
+    % get index for final time
+    index = contmap.timemap(2);
+    % guess for final time in phase
+    ZmulG(index) = guessp.boundmultipliers.t0tfmult(2);
+    
+    ZstateG(index) = guessb.boundbasis.t0tfbasis(2);
+    
+    % get NLP guess for Q
+    if numintegralp ~= 0;
+      for integralcount = 1:numintegralp;
+        % get index from map
+        index = contmap.integralvarmap(1,integralcount);
+        % interp integral guess
+        ZmulG(index) = guessp.boundmultipliers.Qmult(integralcount);
+        ZstateG(index) = guessb.boundbasis.Qbasis(integralcount);
+      end
+    end     
+  end
+  
+end
+
+% get NLP guess for parameters
+if numparameter ~= 0;
+  % getnlp parameter variable map
+  parametermap = probinfo.nlpparametermap;
+  parameterguess = setup.guess.parameter;
+  for parametercount = 1:numparameter;
+    % get index
+    index = parametermap(parametercount);
+    
+    % get guess for parameter
+    ZG(index) = parameterguess(parametercount);
+  end
+end
+
+% get NLP guess for parameter bounds
+if numparameter ~= 0
+    if probinfo.warmStartFlag && strcmp(setup.nlp.solver,'ipopt')
+        % getnlp parameter variable map
+        parametermap = probinfo.nlpparametermap;
+        for parametercount = 1:numparameter;
+          % get index
+          index = parametermap(parametercount);
+          % get guess for parameter
+          zlG(index) = setup.guess.staticparametermultipliers.l(parametercount);
+          zuG(index) = setup.guess.staticparametermultipliers.u(parametercount);
+        end
+    elseif probinfo.warmStartFlag && strcmp(setup.nlp.solver,'snopt')
+
+        % getnlp parameter variable map
+        parametermap = probinfo.nlpparametermap;
+        for parametercount = 1:numparameter;
+          % get index
+          index = parametermap(parametercount);
+          % get guess for parameter
+          ZmulG(index) = setup.guess.staticparametermultipliers(parametercount);
+          ZstateG(index) = setup.guess.staticparameterbasis(parametercount);
+        end 
+    end
+end
+% get NLP guess for event multipliers
+if probinfo.warmStartFlag
+  if numeventgroup ~= 0
+    nlpeventmap = probinfo.nlpeventmap;
+    for eventgroupcount = 1:numeventgroup;
+      index = nlpeventmap(1,eventgroupcount):nlpeventmap(2,eventgroupcount);
+      FmulG(index) = setup.guess.eventgroupmultipliers(eventgroupcount).eventmult.';
+      if strcmp(setup.nlp.solver,'snopt')
+         FstateG(index) = setup.guess.eventgroupbasis(eventgroupcount).eventbasis.'; 
+      end
+    end
+  end
+end
+
+% assign outputs
+varargout{1} = ZG;
+if probinfo.warmStartFlag && strcmp(setup.nlp.solver,'ipopt')
+  varargout{2} = zlG;
+  varargout{3} = zuG;
+  varargout{4} = FmulG;
+elseif probinfo.warmStartFlag && strcmp(setup.nlp.solver,'snopt')
+  varargout{2} = ZmulG;
+  varargout{3} = FmulG; 
+  varargout{4} = FstateG;
+  varargout{5} = ZstateG;
+end

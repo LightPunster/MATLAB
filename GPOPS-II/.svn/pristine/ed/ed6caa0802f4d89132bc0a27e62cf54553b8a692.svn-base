@@ -1,0 +1,159 @@
+function [numnodes, collocation] = gpopsPointsWeightsRPMD(currentmesh)
+
+% gpopsPointsWeightsRPMD
+% this function finds the points, quadrature weights,
+% differentiation matrix and the time map derivatives for the
+% Segmented Radau Pseudospectral Method,
+% the diagnal and off diagnal differentiation matrics are stored sparsely
+% (row, colunm, value)
+
+% NOTE
+% s, w second column is values on [-1,1)
+% D 4 column is values for [-1,1)
+
+% get number of phases
+numphase = size(currentmesh,2);
+
+% preallocate fraction Mat, collocation points, weights and diff matrix for
+% each phase
+numnodes = zeros(1,numphase);
+collocation(numphase).fractionMat = [];
+collocation(numphase).s = [];
+collocation(numphase).w = [];
+collocation(numphase).Ddiag = [];
+collocation(numphase).Doffdiag = [];
+collocation(numphase).dtdt0 = [];
+collocation(numphase).dtdtf = [];
+
+% find LGR points, weights, and differentation matrix for each phase
+for phasecount = 1:numphase;
+  % get currentmesh information
+  colpoints = currentmesh(phasecount).colpoints;
+  fraction = currentmesh(phasecount).fraction;
+  sumcolpoints = sum(colpoints);
+  cumsumfraction = [0, cumsum(fraction)];
+  cumsumcolpoints = [0, cumsum(colpoints)];
+  cumsumcolpointssq = [0, cumsum(colpoints.^2)];
+  
+  % number of segments
+  numseg = length(colpoints);
+  
+  % preallocate fraction, s, w, Ddiag, Doffdiag for each phase
+  fractionvect = zeros(sumcolpoints,1);
+  s = zeros(sumcolpoints,2);
+  w = zeros(sumcolpoints,2);
+  Ddiag = zeros(sumcolpoints,4);
+  Doffdiag = zeros(sum(colpoints.^2),4);
+  for segcount = 1:numseg;
+    % assignment index
+    sindex = (1:colpoints(segcount)) + cumsumcolpoints(segcount);
+    oDindex = (1:colpoints(segcount)^2) + cumsumcolpointssq(segcount);
+    
+    % get LGR points, weights, and differentation matrix for segment
+    [tau, weights, Doffdiagseg, DDdiagseg] = PointsWeightsLGRD(colpoints(segcount));
+    
+    % fraction vector for segment
+    fractionvect(sindex,1) = fraction(segcount);
+    
+    % points for segment
+    s(sindex,1) = (tau + 1).*fraction(segcount) + 2.*cumsumfraction(segcount) - 1;
+    s(sindex,2) = tau;
+    
+    % weights for segment
+    w(sindex,1) = weights.*fraction(segcount);
+    w(sindex,2) = weights;
+    
+    % differentation matrix for segment
+    Ddiag(sindex,1:2) = DDdiagseg(:,1:2) + cumsumcolpoints(segcount);
+    Ddiag(sindex,3) = DDdiagseg(:,3)./fraction(segcount);
+    Ddiag(sindex,4) = DDdiagseg(:,3);
+    Doffdiag(oDindex,1:2) = Doffdiagseg(:,1:2) + cumsumcolpoints(segcount);
+    Doffdiag(oDindex,3) = Doffdiagseg(:,3)./fraction(segcount);
+    Doffdiag(oDindex,4) = Doffdiagseg(:,3);
+  end
+  numnodes(phasecount) = sumcolpoints;
+  fracindex = 1:sumcolpoints;
+  collocation(phasecount).fractionMat = sparse(fracindex,fracindex,fractionvect,sumcolpoints,sumcolpoints);
+  collocation(phasecount).s = s;
+  collocation(phasecount).w = w;
+  collocation(phasecount).Ddiag = Ddiag;
+  collocation(phasecount).Doffdiag = Doffdiag;
+  collocation(phasecount).dtdt0 = (1-s(:,1))/2;
+  collocation(phasecount).dtdtf = (1+s(:,1))/2;
+end
+
+end
+
+function [tau, weights, Doffdiag, Ddiag] = PointsWeightsLGRD(N)
+
+% gpopsPointsWeightsLGRD
+% this function finds the Legendre-Gauss-Radau points, quadrature weights,
+% and the differentiation matrix that corresponds to the N LGR points
+% the diagnal and off diagnal differentiation matrics are stored sparsely
+% (row, colunm, value)
+
+% initial guess for LGR nodes
+Nm1 = N-1;
+tau = -cos(2*pi*(0:Nm1)/(2*Nm1+1))';
+
+% the Legendre Vandermonde matrix
+P = zeros(N,N+1);
+xold = 2;
+
+% Newton Raphson method
+Nindex = 2:N;
+while max(abs(tau-xold))>eps
+  xold = tau;
+  P(1,:) = (-1).^(0:N);
+  P(Nindex,1) = 1;
+  P(Nindex,2) = tau(Nindex);
+  for k = 2:N
+    P(Nindex,k+1) = ( (2*k-1)*tau(Nindex).*P(Nindex,k)-(k-1)*P(Nindex,k-1) )/k;
+  end
+  tau(Nindex) = xold(Nindex)-((1-xold(Nindex))/N).*(P(Nindex,N)+P(Nindex,N+1))./(P(Nindex,N)-P(Nindex,N+1));
+end
+
+% the Legendre-Gauss-Radau Vandermonde
+P = P(1:N,1:N);
+
+% compute the weights
+weights = zeros(N,1);
+weights(1) = 2/N^2;
+weights(Nindex) = (1-tau(Nindex))./(N*P(Nindex,N)).^2;
+
+% compute differentiation matrix
+xxPlusEnd = [tau; 1];
+M = length(xxPlusEnd);
+M1 = M+1;
+M2 = M*M;
+
+% compute the barycentric weights
+Y = repmat(xxPlusEnd,1,M);
+Ydiff = Y - Y'+eye(M);
+
+WW = repmat(1./prod(Ydiff,2),1,M);
+D = WW./(WW'.*Ydiff);
+
+D(1:M1:M2) = 1-sum(D);
+
+% full differentiation matrix
+D = -D';
+D = D(1:N,:);
+
+% find D and Ddiag as a sparse triplet
+% (row, colunm, value)
+Doffdiag = zeros(N.*N,3);
+Ddiag = zeros(N,3);
+
+% seperate diagnal from off diagnal
+index = 1:N;
+for rowcount = 1:N;
+  Doffdiag(index,1) = rowcount.*ones(N,1);
+  Doffdiag(index,2) = [1:rowcount-1, rowcount+1:N+1]';
+  Doffdiag(index,3) = [D(rowcount,1:rowcount-1), D(rowcount, rowcount+1:N+1)]';
+  index = index + N;
+  Ddiag(rowcount,1) = rowcount;
+  Ddiag(rowcount,2) = rowcount;
+  Ddiag(rowcount,3) = D(rowcount,rowcount);
+end
+end
