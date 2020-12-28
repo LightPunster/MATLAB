@@ -5,10 +5,19 @@ function circle(x,y,r,varargin)
         inc = varargin{1};
     end
 
-    hold on
+    %Make sure that other plots are not overwritten
+    precallState = ishold;
+    if ~precallState
+        hold on
+    end
+    
     th = 0:inc:2*pi;
     xunit = r * cos(th) + x;
     yunit = r * sin(th) + y;
     h = plot(xunit, yunit);
-    hold off
+    
+    %Turn hold back off if it was off before call
+    if ~precallState
+        hold off
+    end
 end

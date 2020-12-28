@@ -11,7 +11,7 @@ Directory descriptions:
 - linalg - useful functions for linear algebra and controls
 - probability - probability and random event classes and functions
 - simulation - dynamic system simulation
-- TODO: orbital - orbital mechanics
+- orbital - orbital mechanics functions
 - util - miscellanious useful functions
 
 
