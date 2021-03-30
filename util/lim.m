@@ -1,6 +1,6 @@
 function x = lim(x,range,varargin)
 %lim Limits input to a specified range
-%   usage: x = lim(x,x_hi,x_lo);
+%   usage: x = lim(x,[x_lo,x_hi],...);
 %       x = input
 %       range = limits for x in format [lower limit, upper limit]
 %
