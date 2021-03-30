@@ -1,20 +1,16 @@
-function drdt = OrbitDynamics_n(~,r,varargin)
+function drdt = OrbitDynamics_n(~,r,m)
 %OrbitDynamics_n can be used by ode45 to propogate the orbits of n point
 %masses.
 %
 %   Parameters are
 %       ~ = unused time parameter required by ode45
 %       r = vector of positions and velocities ([x;y;z;x_dot;y_dot;z_dot])
-%       varargin = masses of each object
+%       m = masses of each object
 %
 %   Note: This function may not work for very high values of n
     
     G = 6.67408e-11;
-    n = nargin - 2;
-    m = zeros(1,n);
-    for i=1:n
-        m(i) = varargin{i};
-    end
+    n = length(m);
     
     drdt = zeros(6*n,1);
     for i=1:n %Loop through each mass

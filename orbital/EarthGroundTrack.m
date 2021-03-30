@@ -72,8 +72,8 @@ xlabel('Longitude (degrees)'), ylabel('Lattitude (degrees)')
 options = odeset('RelTol',1e-12,'AbsTol',1e-12);
 L0 = O; %Initial longitudes of each satellite
 for i=1:numSats
-    %[t,r] = ode45(@(t,r) OrbitDynamics_Sphere(t,r,u),T,[r0(:,i), v0(:,i)],options); %Diff Eq Solution
-    [t,r] = ode45(@(t,r) OrbitDynamics_J2(t,r,u,Re,J2),T,[r0(:,i), v0(:,i)],options); %Diff Eq Solution
+    [t,r] = ode45(@(t,r) OrbitDynamics_Sphere(t,r,u),T,[r0(:,i), v0(:,i)],options); %Diff Eq Solution
+    %[t,r] = ode45(@(t,r) OrbitDynamics_J2(t,r,u,Re,J2),T,[r0(:,i), v0(:,i)],options); %Diff Eq Solution
     rnorm = sqrt(sum((r.^2)'));
     t_inc = t(2) - t(1);
     if e(i)~=0
