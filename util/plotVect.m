@@ -34,8 +34,7 @@ switch length(v)
     case 3
         plot3([origin(1),origin(1)+v(1)],...
               [origin(2),origin(2)+v(2)],...
-              [origin(3),origin(3)+v(3)],...
-               color)
+              [origin(3),origin(3)+v(3)])
     otherwise
         error('v should be a vector or list of vectors of length 2 or 3')
 end

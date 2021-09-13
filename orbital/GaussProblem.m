@@ -1,5 +1,6 @@
 function [v1,v2] = GaussProblem(mu,r1,r2,t,varargin)
-%GaussProblem: solves Gauss's Problem from orbital mechanics
+%GaussProblem: solves Gauss's Problem from orbital mechanics using a
+%universal variable formulation
 %
 %   Given two orbital radius vectors and the time between them,
 %   determines the velocity vectors at both points.
@@ -56,7 +57,7 @@ while abs(t-tn)>1e-6
     x = sqrt(y/C);
     tn = (S*x^3 + A*sqrt(y))/sqrt(mu);
     
-    %Make adjustment to universal variabl z
+    %Make adjustment to universal variable z via bisection method
     if tn<t
         z_range(1) = z;
     elseif tn>t
@@ -84,7 +85,7 @@ function c = C_funct(z)
         c = (1-cos(sqrt(z)))/z;
     elseif z<-0.01 %Negative: Hyperbola
         c = (cosh(sqrt(-z))-1)/(-z);
-    else %Near Zero: Approaching hyperbola, use series expansion
+    else %Near Zero: Approaching parabola, use series expansion
         c = (1/factorial(2)) - (z/factorial(4)) + (z^2)/factorial(6) - (z^3)/factorial(8);
     end
 end
@@ -94,7 +95,7 @@ function s = S_funct(z)
         s = (sqrt(z)-sin(sqrt(z)))/sqrt(z^3);
     elseif z<-0.01 %Negative: Hyperbola
         s = (sinh(sqrt(-z))-sqrt(-z))/sqrt((-z)^3);
-    else %Near Zero: Approaching hyperbola, use series expansion
+    else %Near Zero: Approaching parabola, use series expansion
         s = (1/factorial(3)) - (z/factorial(5)) + (z^2)/factorial(7) - (z^3)/factorial(9);
     end
 end

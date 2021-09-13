@@ -1,8 +1,23 @@
+%% ShiftEqPnt
+f = @(x) [-x(1) + x(1)*x(2) + 1; -x(2)];
+x_eq = EquilibriumPoints(f);
+figure(1)
+subplot(1,2,1)
+PhasePlane(f,x_eq(1)+[-2,2],x_eq(2)+[-2,2],20);
+subplot(1,2,2)
+%PhasePlane(@(x) ShiftEqPnt(f,x_eq,x),[-2,2],[-2,2],20);
+PhasePlane(@(x) ShiftEqPnt(f,x_eq,x),[-2,2],[-2,2],20);
+
+syms x1 x2
+x = [x1;x2];
+f = [-x(1) + x(1)*x(2) + 1; -x(2)]
+%f2 = ShiftEqPnt(f,x_eq)
+f2 = ShiftEqPnt(f,x_eq,[4;5])
+
 %% MaxRoA
 clear,clc,close all
 f = @(x) [-x(1) + x(1)*x(2); -x(2)];
 [P,A,r] = MaxRoA(f)
-
 
 %% EquilibriumPoints
 clear, clc, close all
@@ -31,34 +46,34 @@ theta_range = [-2*pi,2*pi];
 omega_range = [-4*pi,4*pi];
 
 figure(1),hold on
-%PhasePlane(theta_range,omega_range,@(x) pendulum(x,10,1));
-PhasePlane(theta_range,omega_range,@(x) pendulum(x,10,1),20);
-%PhasePlane(theta_range,omega_range,@(x) pendulum(x,10,1),20,10);
+%PhasePlane(@(x) pendulum(x,10,1),theta_range,omega_range);
+PhasePlane(@(x) pendulum(x,10,1),theta_range,omega_range,20);
+%PhasePlane(@(x) pendulum(x,10,1),theta_range,omega_range,20,10);
 plot([-2*pi,0,2*pi],[0,0,0],'g*') %Stable equilibrium
 plot([-pi,pi],[0,0],'r*') %Unstable equilibrium
 
 range = [-1,1];
 figure(2)
 subplot(3,4,1)
-PhasePlane(range,range,@stable); title('Stable Node (l1<0,l2<0)'); axis([range range])
+PhasePlane(@stable,range,range); title('Stable Node (l1<0,l2<0)'); axis([range range])
 subplot(3,4,2)
-PhasePlane(range,range,@saddle); title('Saddle Point (l1<0,l2>0)'); axis([range range])
+PhasePlane(@saddle,range,range); title('Saddle Point (l1<0,l2>0)'); axis([range range])
 subplot(3,4,3)
-PhasePlane(range,range,@unstable); title('Unstable Node (l1>0,l2>0)'); axis([range range])
+PhasePlane(@unstable,range,range); title('Unstable Node (l1>0,l2>0)'); axis([range range])
 subplot(3,4,4)
-PhasePlane(range,range,@stable_focus); title('Stable Focus (Real(l1)<0, Real(l2)<0)'); axis([range range])
+PhasePlane(@stable_focus,range,range); title('Stable Focus (Real(l1)<0, Real(l2)<0)'); axis([range range])
 subplot(3,4,5)
-PhasePlane(range,range,@unstable_focus); title('Unstable Focus (Real(l1)>0, Real(l2)>0)'); axis([range range])
+PhasePlane(@unstable_focus,range,range); title('Unstable Focus (Real(l1)>0, Real(l2)>0)'); axis([range range])
 subplot(3,4,6)
-PhasePlane(range,range,@marginal); title('Marginally Stable Focus (l1,l2 imaginary)'); axis([range range])
+PhasePlane(@marginal,range,range); title('Marginally Stable Focus (l1,l2 imaginary)'); axis([range range])
 subplot(3,4,7)
-PhasePlane(range,range,@stable_repeated); title('Stable Repeated (l1=l2<0)'); axis([range range])
+PhasePlane(@stable_repeated,range,range); title('Stable Repeated (l1=l2<0)'); axis([range range])
 subplot(3,4,8)
-PhasePlane(range,range,@unstable_repeated); title('Unstable Repeated (l1=l2>0)'); axis([range range])
+PhasePlane(@unstable_repeated,range,range); title('Unstable Repeated (l1=l2>0)'); axis([range range])
 subplot(3,4,9)
-PhasePlane(range,range,@stable_line); title('Stable w/ 0 (l1<0,l2=0)'); axis([range range])
+PhasePlane(@stable_line,range,range); title('Stable w/ 0 (l1<0,l2=0)'); axis([range range])
 subplot(3,4,10)
-PhasePlane(range,range,@unstable_line); title('Unstable w/ 0 (l1>0,l2=0)'); axis([range range])
+PhasePlane(@unstable_line,range,range); title('Unstable w/ 0 (l1>0,l2=0)'); axis([range range])
 %% Functions
 function x_dot = stable(x) %Stable node Jordan form
     A = [-1 0; 0 -2];
